@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """Main routine of the Angular Momentum Coupling."""
 
 import os.path
@@ -99,7 +97,7 @@ def main():
     start_time = datetime.datetime.now()
 
     # Angular-momentum reduction
-    amc.AMCReduction.AMCReduction(equations, output_file, doPermutations=permute, doSmartPermutations=permute_smart, verbose=verbose, keqnMaster=select_equation, ktermMaster=select_term, kpermMaster=select_permutation)
+    amc.AMCReduction.AMCReduction(equations, output_file, doPermutations=permute, doSmartPermutations=permute_smart, verbose=verbose, print_threej=run_arguments.print_threej, keqnMaster=select_equation, ktermMaster=select_term, kpermMaster=select_permutation)
 
     print("Time elapsed: %s.\n" % (datetime.datetime.now() - start_time))
 

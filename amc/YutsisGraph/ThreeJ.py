@@ -9,8 +9,18 @@ class ThreeJ:
         # { idx1 idx2 idx3 }
         self.indices = (idx1,idx2,idx3)
 
+    @classmethod
+    def getPreamble(cls):
+        """Get the newcommand line for Latex output"""
+
+        return '\\newcommand{\\threej}[3]{\{#1,#2,#3\}}\n'
+
     def __str__(self):
         """Generate the corresponding LaTeX code"""
 
-        return "\{%s,%s,%s\}"%(self.indices[0].jtex,self.indices[1].jtex,self.indices[2].jtex)
+        threejTex = "\\threej"
+        for idx in self.indices:
+            threejTex += "{%s}"%(idx.jtex)
+
+        return threejTex
 

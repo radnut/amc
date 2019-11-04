@@ -22,6 +22,7 @@ class ClbLatexFile(LatexFile):
 
         self.addString(ClebschGordan.getPreamble())
         self.addString(SixJ.getPreamble())
+        self.addString(ThreeJ.getPreamble())
         self.addString('\n')
 
     def generateLHS(self,indices,clebsches):

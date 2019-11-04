@@ -9,7 +9,7 @@ from amc.JTensor import JTensor
 from amc.MTensor import MTensor
 from amc.YutsisGraph import Idx,YutsisReduction
 
-def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermutations=False, verbose=False, keqnMaster=None, ktermMaster=None, kpermMaster=None):
+def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermutations=False, verbose=False, print_threej=False, keqnMaster=None, ktermMaster=None, kpermMaster=None):
     # Print Latex - Preamble
     TEX = AMCLatexFile(outputFileName)
 
@@ -521,7 +521,7 @@ def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermuta
                 TEX.addString("\\begin{align}\n")
                 TEX.generateLHS(prefactorSave,sumsSave,newAmplitudesSave)
                 # Right Hand Side
-                TEX.generateRHS(YSave,prefactorSave,sumsSave,indicesSave,sums2Save,jAmplitudesSave,noThreeJ=True)
+                TEX.generateRHS(YSave,prefactorSave,sumsSave,indicesSave,sums2Save,jAmplitudesSave,noThreeJ = not print_threej)
                 TEX.addString("\n")
                 TEX.addString("\\end{align}\n\n")
 

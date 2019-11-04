@@ -16,10 +16,11 @@ def parse_command_line():
         + "and return the result as a LaTeX file.")
 
     parser.add_argument('source', help='input file')
+    parser.add_argument('-b', '--binary', action='store_true', help='Input source file in binary format.')
     parser.add_argument('-o', '--output', nargs=1, help='output file')
     parser.add_argument('-p', '--permute', choices=['yes', 'no', 'smart'], default='smart',
                       help='Permute tensor indices to find simpler formulas. `smart\' tries only the ones that are probable to succeed.')
-    parser.add_argument('-b', '--binary', action='store_true', help='Input source file in binary format.')
+    parser.add_argument('--print_threej', action='store_true', help='Print 3j-coefficients.')
     parser.add_argument('--select_equation', default=None,
                       help='Select a specific equation (Use for debuging purpose).')
     parser.add_argument('--select_term', default=None,
