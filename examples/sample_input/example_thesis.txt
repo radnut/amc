@@ -1,0 +1,9 @@
+declare C { mode=(2,2), latex="C" }
+
+declare S { mode=(2,2), latex="S" }
+
+declare T { mode=(2,2), latex="T" }
+
+declare nbar { mode=2, diagonal=true, latex="\bar{n}" }
+
+C_pqrs = 1/2 * sum_tu(nbar_t * nbar_u * S_pqtu * T_turs);

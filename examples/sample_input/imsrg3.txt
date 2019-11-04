@@ -1,0 +1,92 @@
+# Resulting commutators
+declare C0 {
+    mode=0,
+    latex="C",
+}
+declare C1 {
+    mode=2,
+    latex="C",
+}
+declare C2 {
+    mode=4,
+    latex="C",
+}
+declare C3 {
+    mode=6,
+    latex="C",
+}
+
+# First input operator
+declare A1 {
+    mode=2,
+    latex="A",
+}
+declare A2 {
+    mode=4,
+    latex="A",
+}
+declare A3 {
+    mode=6,
+    latex="A",
+}
+
+# Second input operator
+declare B2 {
+    mode=4,
+    latex="B",
+}
+declare B3 {
+    mode=6,
+    latex="B",
+}
+
+# Occupation numbers
+declare n {
+    mode=2,
+    diagonal=true,
+    latex="n"
+}
+declare nbar {
+    mode=2,
+    diagonal=true,
+    latex="\bar{n}"
+}
+
+#### Equations
+# 2.1 [2,2](3) Typo in second factor pqst -> pqsa
+C3_pqrstu = P(pq/r)*P(st/u) * sum_a(A2_pqsa * B2_artu - B2_pqsa * A2_artu);
+
+# 2.2 [3,3](3)
+C3_pqrstu =
+    1/6 * sum_abc((n_a*n_b*n_c + nbar_a*nbar_b*nbar_c) * (A3_pqrabc * B3_abcstu - B3_pqrabc * A3_abcstu))
+    + 1/2 * P(pq/r) * P(st/u)
+        * sum_abc((n_a*n_b*nbar_c + nbar_a*nbar_b*n_c) * (A3_pqcabu * B3_abrstc - B3_pqcabu * A3_abrstc));
+
+# 2.3 [2,3](3)
+C3_pqrstu =
+    1/2 * sum_ab((nbar_a*nbar_b - n_a*n_b) * (P(pq/r)*A2_pqab*B3_abrstu - P(st/u)*B3_pqrabu*A2_abst))
+    + sum_ab((nbar_a*n_b - n_a*nbar_b) * P(pq/r) * P(st/u) * B3_pqastb * A2_brau);
+
+# 2.4 [1,3](3)
+C3_pqrstu = sum_a(P(pq/r)*A1_ra*B3_pqastu - P(st/u)*B3_pqrsta*A1_au);
+
+# 2.5 [3,3](2)
+C2_pqrs =
+    1/6 * sum_abcd((n_a*n_b*n_c*nbar_d - nbar_a*nbar_b*nbar_c*n_d) * (A3_pqdabc*B3_abcrsd - B3_pqdabc*A3_abcrsd))
+    + 1/4 * sum_abcd(n_a*n_b*nbar_c*nbar_d * P(p/q)*P(r/s)*(A3_abpcdr*B3_cdqabs - B3_abpcdr*A3_cdqabs));
+
+# 2.6 [2,3](2)
+C2_pqrs = -1/2 * sum_abc((n_a*n_b*nbar_c + nbar_a*nbar_b*n_c)*(P(p/q)*A2_pcab*B3_abqrsc - P(r/s)*B3_pqcabs*A2_abrc));
+
+# 2.7 [1,3](2)
+C2_pqrs = sum_ab((n_a*nbar_b - nbar_a*n_b) * A1_ab*B3_pqbrsa);
+
+# 2.8 [3,3](1)
+C1_pq = 1/4*sum_abcde((n_a*n_b*nbar_c*nbar_d*nbar_e + nbar_a*nbar_b*n_c*n_d*n_e) * (A3_abpcde*B3_cdeabq - B3_abpcde*A3_cdeabq));
+
+# 2.9 [2,3](1)
+C1_pq = 1/4*sum_abcd(n_a*n_b*nbar_c*nbar_d*(A2_abcd*B3_cdpabq - B3_abpcdq*A2_cdab));
+
+# 2.10 [3,3](0)
+C0 = 1/36 * sum_abcdef(n_a*n_b*n_c*nbar_d*nbar_e*nbar_f*(A3_abcdef*B3_defabc - B3_abcdef*A3_defabc));
+

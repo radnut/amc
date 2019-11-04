@@ -1,3 +1,6 @@
+*.aux
+*.log
+*.pdf
 *.pyc
 
 /amc.egg-info
