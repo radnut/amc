@@ -1,7 +1,7 @@
 
 from copy import copy
-from sympy.combinatorics.permutations import Permutation
 from itertools import permutations
+from sympy.combinatorics.permutations import Permutation
 
 def deltaReduction(Y,jschAmplitudes):
     """Change indices in amplitudes according to the delta list

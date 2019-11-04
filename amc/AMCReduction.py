@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 
+from copy import copy
 from sympy import Rational
 from sys import stdout
-
-from YutsisGraph.Idx import Idx
-from YutsisGraph.Functions import YutsisReduction
-from YutsisGraph.ClbLatexFile import *
-from AMCFunctions import deltaReduction,partition,applyPermutation
-from AMCLatexFile import AMCLatexFile
-from JTensor import JTensor
-from MTensor import MTensor
+from amc.AMCFunctions import deltaReduction,partition,applyPermutation
+from amc.AMCLatexFile import AMCLatexFile
+from amc.JTensor import JTensor
+from amc.MTensor import MTensor
+from amc.YutsisGraph import Idx,YutsisReduction
 
 def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermutations=False, verbose=False, keqnMaster=None, ktermMaster=None, kpermMaster=None):
     # Print Latex - Preamble

@@ -1,6 +1,6 @@
 
 from sympy import Rational
-from YutsisGraph.ClbLatexFile import ClbLatexFile
+from amc.YutsisGraph import ClbLatexFile
 
 class AMCLatexFile(ClbLatexFile):
     """Class for Latex output"""

@@ -1,7 +1,6 @@
 
-from MTensor import MTensor
-from YutsisGraph.ClebschGordan import ClebschGordan
-from YutsisGraph.Idx import Idx
+from amc.MTensor import MTensor
+from amc.YutsisGraph import ClebschGordan,Idx
 
 class JTensor(MTensor):
     """JTensor class"""

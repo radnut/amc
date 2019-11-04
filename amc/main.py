@@ -5,9 +5,9 @@
 import os.path
 import pickle
 import datetime
-import run
-import frontend
-import AMCReduction
+import amc.run
+import amc.frontend
+import amc.AMCReduction
 
 def main():
     """Launch the AMC program."""
@@ -22,7 +22,7 @@ def main():
     )
 
     # Parse command line
-    run_arguments = run.parse_command_line()
+    run_arguments = amc.run.parse_command_line()
 
     # Input file
     if run_arguments.binary:
@@ -31,7 +31,7 @@ def main():
             equations = pickle.load(fp)
     else:
         # Text
-        parser = frontend.Parser(optimize=0)
+        parser = amc.frontend.Parser(optimize=0)
         with open(run_arguments.source) as f:
             parser.parse(f.read(), debug=0)
         if run_arguments.verbose > 0:
@@ -99,7 +99,7 @@ def main():
     start_time = datetime.datetime.now()
 
     # Angular-momentum reduction
-    AMCReduction.AMCReduction(equations, output_file, doPermutations=permute, doSmartPermutations=permute_smart, verbose=verbose, keqnMaster=select_equation, ktermMaster=select_term, kpermMaster=select_permutation)
+    amc.AMCReduction.AMCReduction(equations, output_file, doPermutations=permute, doSmartPermutations=permute_smart, verbose=verbose, keqnMaster=select_equation, ktermMaster=select_term, kpermMaster=select_permutation)
 
     print("Time elapsed: %s.\n" % (datetime.datetime.now() - start_time))
 
