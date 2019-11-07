@@ -23,6 +23,7 @@ class ClbLatexFile(LatexFile):
         self.addString(ClebschGordan.getPreamble())
         self.addString(SixJ.getPreamble())
         self.addString(ThreeJ.getPreamble())
+        self.addString(NineJ.getPreamble())
         self.addString('\n')
 
     def generateLHS(self,indices,clebsches):
@@ -181,4 +182,10 @@ class ClbLatexFile(LatexFile):
 
         for sixj in sixjs:
             self.addString(str(sixj))
+
+    def addRHSNineJs(self,ninejs):
+        """Add NineJs"""
+
+        for ninej in ninejs:
+            self.addString(str(ninej))
 

@@ -56,6 +56,7 @@ class AMCLatexFile(ClbLatexFile):
 
         # Overall sign and Prefactor
         overallSign = 1
+        overallSign *= Y.sign
         for idx in indices:
             overallSign *= idx.sign
         for amp in jschAmplitudes:
@@ -110,6 +111,9 @@ class AMCLatexFile(ClbLatexFile):
 
         # 6j-Symbols
         self.addRHSSixJs(Y.sixjs)
+
+        # 9j-Symbols
+        self.addRHSNineJs(Y.ninejs)
 
         # Temporary
         #self.addString('&')

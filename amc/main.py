@@ -97,7 +97,7 @@ def main():
     start_time = datetime.datetime.now()
 
     # Angular-momentum reduction
-    amc.AMCReduction.AMCReduction(equations, output_file, doPermutations=permute, doSmartPermutations=permute_smart, verbose=verbose, print_threej=run_arguments.print_threej, keqnMaster=select_equation, ktermMaster=select_term, kpermMaster=select_permutation)
+    amc.AMCReduction.AMCReduction(equations, output_file, doPermutations=permute, doSmartPermutations=permute_smart, verbose=verbose, print_threej=run_arguments.print_threej, factorize_ninej=run_arguments.factorize_ninej, keqnMaster=select_equation, ktermMaster=select_term, kpermMaster=select_permutation)
 
     print("Time elapsed: %s.\n" % (datetime.datetime.now() - start_time))
 

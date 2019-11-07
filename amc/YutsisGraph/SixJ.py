@@ -88,6 +88,28 @@ class SixJ:
                         self.indices[0],self.indices[1],self.indices[3],self.indices[4] = self.indices[1],self.indices[0],self.indices[4],self.indices[3]
                     break
 
+    def permute_columns(self,col1,col2):
+        """Permute two columns of the 6j-symbol"""
+
+        # Check arguments
+        if col1 not in range(3) or col2 not in range(3):
+            print("Error: Invalid 6j-symbol column permutation")
+
+        # Permute the two columns
+        self.indices[col1  ],self.indices[col2  ] = self.indices[col2  ],self.indices[col1  ]
+        self.indices[col1+3],self.indices[col2+3] = self.indices[col2+3],self.indices[col1+3]
+
+    def permute_lines_for_columns(self,col1,col2):
+        """Permute lines for two columns of the 6j-symbols"""
+
+        # Check arguments
+        if col1 not in range(3) or col2 not in range(3):
+            print("Error: Invalid 6j-symbol column permutation")
+
+        # Permute lines for the two columns
+        self.indices[col1],self.indices[col1+3] = self.indices[col1+3],self.indices[col1]
+        self.indices[col2],self.indices[col2+3] = self.indices[col2+3],self.indices[col2]
+
     @classmethod
     def getPreamble(cls):
         """Get the newcommand line for Latex output"""

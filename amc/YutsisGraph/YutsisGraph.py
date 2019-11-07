@@ -2,6 +2,7 @@
 from .Delta import *
 from .ThreeJ import *
 from .SixJ import *
+from .NineJ import *
 from .Idx import *
 from .YutsisNode import *
 from .YutsisEdge import *
@@ -14,6 +15,9 @@ class YutsisGraph:
 
         # n number of the Yutsis graph
         self.n = len(threejms)//2
+
+        # Sign
+        self.sign = +1
 
         # Create list of nodes
         self.nodes = [YutsisNode() for _ in range(2*self.n)]
@@ -30,6 +34,9 @@ class YutsisGraph:
 
         # Create list of 6j-Symbols
         self.sixjs = []
+
+        # Create list of 9j-Symbols
+        self.ninejs = []
 
         # Create list of additional indices
         self.additionalIndices = []
@@ -605,4 +612,160 @@ class YutsisGraph:
         # Show 6j-Symbols
         for sixj in self.sixjs:
             print(sixj)
+
+    def factorize_ninejs(self):
+        """Factorize 9j-symbols from a given list of 6j-symbols"""
+
+        # /!\ for the moment only one ninej among three sixj
+
+        # Alias
+        additionalIndices = self.additionalIndices
+        sixjs             = self.sixjs
+
+        # Need at least one additional index
+        if len(additionalIndices) == 0:
+            return
+
+        # Need at least three 6j-symbols
+        if len(sixjs) < 3:
+            return
+
+        # For the moment limited to only one additional index
+        if len(additionalIndices) != 1:
+            return
+
+        # For the moment limited to only one 9j-symbol
+        if len(sixjs) != 3:
+            return
+
+        # Select additionalIndex
+        additionalIndex = additionalIndices[0]
+
+        # Check if this additional index appear in the three 6j-symbols
+        for sixj in sixjs:
+            if additionalIndex not in sixj.indices:
+                return
+
+        # Check if this additional index phase is a multiple of 2
+        if additionalIndex.jphase % 2 != 0:
+            return
+
+        # Check if this additional index has a (2j+1) factor
+        if additionalIndex.jhat != 2:
+            return
+
+        # Put the additional index at a particular position
+        for ksixj,sixj in enumerate(sixjs):
+            position = sixj.indices.index(additionalIndex)
+            col  = position%3
+            line = position//3
+
+            if line == 0:
+                sixj.permute_lines_for_columns(col,(col+1)%3)
+
+            if col != 2-ksixj:
+                sixj.permute_columns(col,2-ksixj)
+
+        # Put other indices in canonical position
+        sixj1 = sixjs[0]
+        sixj2 = sixjs[1]
+        sixj3 = sixjs[2]
+
+        # Already placed indices (j7,j5,j3)
+        idx7 = sixj1.indices[2]
+        idx5 = sixj2.indices[1]
+        idx3 = sixj3.indices[0]
+
+        # First sixj preparation
+        try:
+            position = sixj2.indices.index(sixj1.indices[0])
+        except ValueError:
+            pass
+        else:
+            sixj1.permute_lines_for_columns(0,1)
+
+        # j8
+        idx8 = sixj1.indices[3]
+        try:
+            position = sixj2.indices.index(idx8)
+        except ValueError:
+            print("Error: The index should appear in the two 6j-symbols (in Ninej factorization)")
+        else:
+            col  = position%3
+            line = position//3
+            if line == 1:
+                sixj2.permute_lines_for_columns(0,2)
+            if col == 0:
+                sixj2.permute_columns(0,2)
+
+        # j4
+        idx4 = sixj1.indices[1]
+        try:
+            position = sixj2.indices.index(idx4)
+        except ValueError:
+            print("Error: The index should appear in the two 6j-symbols (in Ninej factorization)")
+        else:
+            if position != 3:
+                print("Error: ninej factorization failed")
+
+        # j1
+        idx1 = sixj1.indices[0]
+        try:
+            position = sixj3.indices.index(idx1)
+        except ValueError:
+            print("Error: The index should appear in the two 6j-symbols (in Ninej factorization)")
+        else:
+            col  = position%3
+            line = position//3
+            if line == 0:
+                sixj3.permute_lines_for_columns(1,2)
+            if col == 2:
+                sixj3.permute_columns(1,2)
+
+        # j9
+        idx9 = sixj1.indices[4]
+        try:
+            position = sixj3.indices.index(idx9)
+        except ValueError:
+            print("Error: The index should appear in the two 6j-symbols (in Ninej factorization)")
+        else:
+            if position != 2:
+                print("Error: ninej factorization failed")
+
+        # j2
+        idx2 = sixj2.indices[0]
+        try:
+            position = sixj3.indices.index(idx2)
+        except ValueError:
+            print("Error: The index should appear in the two 6j-symbols (in Ninej factorization)")
+        else:
+            if position != 5:
+                print("Error: ninej factorization failed")
+
+        # j6
+        idx6 = sixj2.indices[5]
+        try:
+            position = sixj3.indices.index(idx6)
+        except ValueError:
+            print("Error: The index should appear in the two 6j-symbols (in Ninej factorization)")
+        else:
+            if position != 1:
+                print("Error: ninej factorization failed")
+
+        # Add a minus sign if additionalIndex is half-integer
+        additionalIndex.simplify()
+        if additionalIndex.type == 'hint':
+            additionalIndex.sign *= -1
+        self.sign *= additionalIndex.sign
+
+        # Remove additional index
+        additionalIndices.remove(additionalIndex)
+
+        # Remove sixjs
+        sixjs.remove(sixj1)
+        sixjs.remove(sixj2)
+        sixjs.remove(sixj3)
+
+        # Create 9j-symbol
+        self.ninejs.append(NineJ(idx1,idx2,idx3,idx4,idx5,idx6,idx7,idx8,idx9))
 

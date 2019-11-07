@@ -9,7 +9,7 @@ from amc.JTensor import JTensor
 from amc.MTensor import MTensor
 from amc.YutsisGraph import Idx,YutsisReduction
 
-def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermutations=False, verbose=False, print_threej=False, keqnMaster=None, ktermMaster=None, kpermMaster=None):
+def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermutations=False, verbose=False, print_threej=False, factorize_ninej=False, keqnMaster=None, ktermMaster=None, kpermMaster=None):
     # Print Latex - Preamble
     TEX = AMCLatexFile(outputFileName)
 
@@ -443,6 +443,11 @@ def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermuta
                 if Y.getNumberOfNodes() != 0:
                     print("Error: Yutsis graph not fully reduced so continue")
                     continue
+
+                # /!\ ninej (optimization does account for ninej)
+                # /!\ should be done before the addition of additional indices to indices list
+                if factorize_ninej:
+                    Y.factorize_ninejs()
 
                 # Add Y.additionalIndices to indices and interIndices
                 interIndices.extend(Y.additionalIndices)
