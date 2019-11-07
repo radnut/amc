@@ -1,0 +1,24 @@
+# Contributions
+declare E2 {
+    mode=0,
+    latex="E^{(2)}_{0}",
+}
+declare E3 {
+    mode=0,
+    latex="E^{(3)}_{0}",
+}
+
+# Hamiltonian
+declare H {
+    mode=4,
+    latex="H",
+}
+
+# 2nd order
+E2 = 1/4 * sum_abij(H_abij * H_ijab);
+
+# 3rd order (pp + hh + ph)
+E3 = 1/8 * sum_abcdij(H_ijab * H_abcd * H_cdij)
+   + 1/8 * sum_abijkl(H_ijab * H_klij * H_abkl)
+   - sum_abcijk(H_ijab * H_kbic * H_ackj);
+

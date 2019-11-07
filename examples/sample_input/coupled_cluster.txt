@@ -1,0 +1,43 @@
+# Coupled cluster energy
+declare DE {
+    mode=0,
+    latex="{\Delta E_{CC}}",
+}
+
+# Coupled cluster amplitudes
+declare T1 {
+    mode=2,
+    latex="t"
+}
+declare T2 {
+    mode=4,
+    latex="t"
+}
+
+# Fock operator
+declare F {
+    mode=2,
+    latex="f",
+}
+
+# Two-body Hamiltonian
+declare H {
+    mode=4,
+    latex="H",
+}
+
+# Energy
+DE = sum_ai(F_ia * T1_ai)
+   + sum_abij(H_ijab * T1_ai * T1_bj)
+   + 1/4 * sum_abij(H_ijab * T2_abij);
+
+# Amplitude equations
+
+## 2nd order
+#E2 = 1/4 * sum_abij(H_abij * H_ijab);
+#
+## 3rd order (pp + hh + ph)
+#E3 = 1/8 * sum_abcdij(H_ijab * H_abcd * H_cdij)
+#   + 1/8 * sum_abijkl(H_ijab * H_klij * H_abkl)
+#   - sum_abcijk(H_ijab * H_kbic * H_ackj);
+
