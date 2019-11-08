@@ -70,6 +70,65 @@ class YutsisGraph:
                 # Add the corresponding edge to node
                 self.nodes[k].edges[l] = self.edges[kedge]
 
+    def getDisconnectedGraphs(self):
+        """Return a list of disconnected graphs"""
+
+        # Yutsis graph list
+        yutsisGraphs = [self]
+
+        # If empty graph return this empty graph
+        if self.n == 0:
+            return yutsisGraphs
+
+        # Look for disconnected parts
+        ygLength = self.n + 1
+        while ygLength > self.n:
+            ygLenght = self.n
+            nodes = [self.nodes[0]]
+            edges = []
+            for node in nodes:
+                for edge in node.edges:
+                    if edge not in edges:
+                        edges.append(edge)
+                        for edgeNode in edge.nodes:
+                            if edgeNode not in nodes:
+                                nodes.append(edgeNode)
+
+            if len(nodes) > len(self.nodes):
+                print("Error: The length of nodes should be lower than the one of self.nodes")
+            elif len(nodes) == len(self.nodes):
+                return yutsisGraphs
+            else:
+                # Create disconnected Yutsis graph
+                YG = YutsisGraph([],[],self.zeroIdx)
+                YG.n = len(nodes)//2
+                YG.nodes = nodes
+                YG.edges = edges
+                yutsisGraphs.append(YG)
+                # Remove it from principal Yutsis graph
+                self.n -= YG.n
+                for node in YG.nodes:
+                    self.nodes.remove(node)
+                for edge in YG.edges:
+                    self.edges.remove(edge)
+
+        print("Error: Return should occur inside the loop")
+
+    def merge(self,Y):
+        """Merge Y into self"""
+
+        # Check
+        if self.n != 0 or Y.n != 0:
+            print("Error: merge method should be used whenever graphs are fully reduced")
+
+        # Merge Y into self
+        self.sign *= Y.sign
+        self.deltas.extend(Y.deltas)
+        self.threejs.extend(Y.threejs)
+        self.sixjs.extend(Y.sixjs)
+        self.ninejs.extend(Y.ninejs)
+        self.additionalIndices.extend(Y.additionalIndices)
+
     def getNumberOfNodes(self):
         """Get the number of nodes"""
 
@@ -408,7 +467,7 @@ class YutsisGraph:
         self.edges.remove(edgeB)
         self.edges.remove(edgeC)
 
-    def squareReduction(self,squareEdges):
+    def squareReduction(self,squareEdges,addIdxId):
         """Remove a square from the graph"""
 
         # Get the internal edges of the square
@@ -503,7 +562,6 @@ class YutsisGraph:
             nodeDA.changeSign('direct')
 
         # Create an additional index and add it to self.additionalIndices
-        addIdxId = len(self.additionalIndices) + 1
         numbHalfInt = 0
         numbHalfInt += 1 if edgeB.idx.type == 'hint' else 0
         numbHalfInt += 1 if edgeD.idx.type == 'hint' else 0
@@ -615,6 +673,10 @@ class YutsisGraph:
 
     def factorize_ninejs(self):
         """Factorize 9j-symbols from a given list of 6j-symbols"""
+
+        # { idx1 idx2 idx3 }
+        # { idx4 idx5 idx6 }                          { idx1 idx4 idx7 } { idx2 idx5 idx8 } { idx3 idx6 idx9 }
+        # { idx7 idx8 idx9 } = sum_x (-1)^{2x} (2x+1) { idx8 idx9    x } { idx4    x idx6 } {    x idx1 idx2 }
 
         # /!\ for the moment only one ninej among three sixj
 

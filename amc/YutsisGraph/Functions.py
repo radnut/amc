@@ -250,7 +250,6 @@ def canonicalization(threejms,indices,deltas):
         # Non-connected graph:
         # Add another threejm to outputList and loop
         if k == len(outputList)-1 and k != len(threejms)-1:
-            print("Error: Treatment of non-connected graph is currently not implemented")
             for threejm in threejms:
                 if threejm not in outputList:
                     outputList.append(threejm)
@@ -262,8 +261,6 @@ def canonicalization(threejms,indices,deltas):
 
 def YutsisReduction(indices,clebsches,zeroIdx):
     """Proceed to the simplification of the Yutsis graph"""
-
-    # /!\ Disconnected graph ?
 
     # Transform Clebsch-Gordan coefficients into 3JM-Symbols
     threejms = []
@@ -278,45 +275,57 @@ def YutsisReduction(indices,clebsches,zeroIdx):
     canonicalization(threejms,indices,deltas)
 
     # Create the Yutsis Graph
-    Y = YutsisGraph(threejms,deltas,zeroIdx)
+    Ymain = YutsisGraph(threejms,deltas,zeroIdx)
 
-    # Main graph reduction loop
-    iterNum = 0
-    iterMax = 100
-    while Y.getNumberOfNodes() > 2 and iterNum < iterMax:
-        iterNum += 1
-        onecycleEdges = []
-        bubbleEdges = []
-        triangleEdges = []
-        squareEdges = []
+    # Get disconnected graphs
+    Ylist = Ymain.getDisconnectedGraphs()
 
-        if Y.onecycleSearch(onecycleEdges) != []:
-            print("Error: One-cycle reduction should only follows a two-cycle reduction")
-            exit(-1)
-        elif Y.bubbleSearch(bubbleEdges) != []:
-            Y.bubbleReduction(bubbleEdges[0])
-        elif Y.triangleSearch(triangleEdges) != []:
-            Y.triangleReduction(triangleEdges[0])
-        elif Y.squareSearch(squareEdges) != []:
-            Y.squareReduction(squareEdges[0])
-        else:
-            print("Error: Bigger than square not implemented yet")
-            break
+    # Loop over disconnected Yutsis graph
+    addIdxId = 0
+    for Y in Ylist:
 
-    # Maximum number of iteration achieved
-    if iterNum == iterMax:
-        print("Error: Maximum number of iteration achieved")
+        # Main graph reduction loop
+        iterNum = 0
+        iterMax = 100
+        while Y.getNumberOfNodes() > 2 and iterNum < iterMax:
+            iterNum += 1
+            onecycleEdges = []
+            bubbleEdges = []
+            triangleEdges = []
+            squareEdges = []
 
-    # Get the final 3J-symbol
-    if Y.getNumberOfNodes() == 2:
-        Y.finalThreeJSymbol()
+            if Y.onecycleSearch(onecycleEdges) != []:
+                print("Error: One-cycle reduction should only follows a two-cycle reduction")
+                exit(-1)
+            elif Y.bubbleSearch(bubbleEdges) != []:
+                Y.bubbleReduction(bubbleEdges[0])
+            elif Y.triangleSearch(triangleEdges) != []:
+                Y.triangleReduction(triangleEdges[0])
+            elif Y.squareSearch(squareEdges) != []:
+                addIdxId += 1
+                Y.squareReduction(squareEdges[0],addIdxId)
+            else:
+                print("Error: Bigger than square not implemented yet")
+                break
 
-    # Yutsis graph not fully reduced
-    if Y.getNumberOfNodes() != 0:
-        print("Error: Yutsis graph not fully reduced")
+        # Maximum number of iteration achieved
+        if iterNum == iterMax:
+            print("Error: Maximum number of iteration achieved")
 
-    # Remove 3j-Symbols that are already part of a 6j-Symbol
-    Y.removeRedondantThreeJ()
+        # Get the final 3J-symbol
+        if Y.getNumberOfNodes() == 2:
+            Y.finalThreeJSymbol()
 
-    return Y
+        # Yutsis graph not fully reduced
+        if Y.getNumberOfNodes() != 0:
+            print("Error: Yutsis graph not fully reduced")
+
+        # Remove 3j-Symbols that are already part of a 6j-Symbol
+        Y.removeRedondantThreeJ()
+
+    # Merge Yutsis graphs
+    for Y in Ylist[1:]:
+        Ylist[0].merge(Y)
+
+    return Ylist[0]
 
