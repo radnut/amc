@@ -24,6 +24,7 @@ class ClbLatexFile(LatexFile):
         self.addString(SixJ.getPreamble())
         self.addString(ThreeJ.getPreamble())
         self.addString(NineJ.getPreamble())
+        self.addString(TwelveJFirst.getPreamble())
         self.addString('\n')
 
     def generateLHS(self,indices,clebsches):
@@ -188,4 +189,10 @@ class ClbLatexFile(LatexFile):
 
         for ninej in ninejs:
             self.addString(str(ninej))
+
+    def addRHSTwelveJFirsts(self,twelvejfirsts):
+        """Add TwelveJFirsts"""
+
+        for twelvejfirst in twelvejfirsts:
+            self.addString(str(twelvejfirst))
 

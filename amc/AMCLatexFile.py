@@ -115,6 +115,9 @@ class AMCLatexFile(ClbLatexFile):
         # 9j-Symbols
         self.addRHSNineJs(Y.ninejs)
 
+        # 12j(I)-Symbols
+        self.addRHSTwelveJFirsts(Y.twelvejfirsts)
+
         # Temporary
         #self.addString('&')
 

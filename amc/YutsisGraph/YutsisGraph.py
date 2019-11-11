@@ -3,6 +3,7 @@ from .Delta import *
 from .ThreeJ import *
 from .SixJ import *
 from .NineJ import *
+from .TwelveJFirst import *
 from .Idx import *
 from .YutsisNode import *
 from .YutsisEdge import *
@@ -37,6 +38,9 @@ class YutsisGraph:
 
         # Create list of 9j-Symbols
         self.ninejs = []
+
+        # Create list of 12j(I)-Symbols
+        self.twelvejfirsts = []
 
         # Create list of additional indices
         self.additionalIndices = []
@@ -674,39 +678,26 @@ class YutsisGraph:
     def factorize_ninejs(self):
         """Factorize 9j-symbols from a given list of 6j-symbols"""
 
+        # Loop in reverse order because additionalIndex can be removed from the list in the process
+        for k,addIndex in enumerate(self.additionalIndices[::-1]):
+            self.factorize_ninej(addIndex)
+
+    def factorize_ninej(self,additionalIndex):
+        """ /!\ Factorize 9j-symbols from a given list of 6j-symbols"""
+
         # { idx1 idx2 idx3 }
         # { idx4 idx5 idx6 }                          { idx1 idx4 idx7 } { idx2 idx5 idx8 } { idx3 idx6 idx9 }
         # { idx7 idx8 idx9 } = sum_x (-1)^{2x} (2x+1) { idx8 idx9    x } { idx4    x idx6 } {    x idx1 idx2 }
 
-        # /!\ for the moment only one ninej among three sixj
+        # Get 6j-symbols which contains this additional index
+        sixjs = []
+        for sixj in self.sixjs:
+            if additionalIndex in sixj.indices:
+                sixjs.append(sixj)
 
-        # Alias
-        additionalIndices = self.additionalIndices
-        sixjs             = self.sixjs
-
-        # Need at least one additional index
-        if len(additionalIndices) == 0:
-            return
-
-        # Need at least three 6j-symbols
-        if len(sixjs) < 3:
-            return
-
-        # For the moment limited to only one additional index
-        if len(additionalIndices) != 1:
-            return
-
-        # For the moment limited to only one 9j-symbol
+        # Additional index should appear in three 6j-symbols to make one 9j-symbol
         if len(sixjs) != 3:
             return
-
-        # Select additionalIndex
-        additionalIndex = additionalIndices[0]
-
-        # Check if this additional index appear in the three 6j-symbols
-        for sixj in sixjs:
-            if additionalIndex not in sixj.indices:
-                return
 
         # Check if this additional index phase is a multiple of 2
         if additionalIndex.jphase % 2 != 0:
@@ -721,10 +712,8 @@ class YutsisGraph:
             position = sixj.indices.index(additionalIndex)
             col  = position%3
             line = position//3
-
-            if line == 0:
+            if line != 1:
                 sixj.permute_lines_for_columns(col,(col+1)%3)
-
             if col != 2-ksixj:
                 sixj.permute_columns(col,2-ksixj)
 
@@ -821,13 +810,89 @@ class YutsisGraph:
         self.sign *= additionalIndex.sign
 
         # Remove additional index
-        additionalIndices.remove(additionalIndex)
+        self.additionalIndices.remove(additionalIndex)
 
         # Remove sixjs
-        sixjs.remove(sixj1)
-        sixjs.remove(sixj2)
-        sixjs.remove(sixj3)
+        self.sixjs.remove(sixj1)
+        self.sixjs.remove(sixj2)
+        self.sixjs.remove(sixj3)
 
         # Create 9j-symbol
         self.ninejs.append(NineJ(idx1,idx2,idx3,idx4,idx5,idx6,idx7,idx8,idx9))
+
+    def factorize_twelvejfirsts(self):
+        """Factorize 12j(I)-symbols from a given list of 6j-symbols and 9j-symbols"""
+
+        # Loop in reverse order because additionalIndex can be removed from the list in the process
+        for k,addIndex in enumerate(self.additionalIndices[::-1]):
+            self.factorize_twelvejfirst(addIndex)
+
+    def factorize_twelvejfirst(self,additionalIndex):
+        """ /!\ Factorize 12j(I)-symbols from a given list of 6j-symbols and 9j-symbols"""
+
+        #                    {j1  j2   j3   j4   }
+        #                    {  j5   j6   j7   j8}
+        # (1)^{j1+j3-j9-j11} {j9  j10  j11  j12  }
+        #
+        #                { j1  j3  x   }
+        #                { j8  j4  j9  } { j3  j1  x   } { j9  j11 x   }
+        # = sum_x (2x+1) { j12 j7  j11 } { j5  j6  j2  } { j6  j5  j10 }
+
+        # Get 6j-symbols which contains this additional index
+        sixjs = []
+        for sixj in self.sixjs:
+            if additionalIndex in sixj.indices:
+                sixjs.append(sixj)
+
+        # Additional index should appear in two 6j-symbols
+        if len(sixjs) != 2:
+            return
+
+        # Get 9j-symbols which contains this additional index
+        ninejs = []
+        for ninej in self.ninejs:
+            if additionalIndex in ninej.indices:
+                ninejs.append(ninej)
+
+        # Additional index should appear in one 9j-symbol
+        if len(ninejs) != 1:
+            return
+        ninej = ninejs[0]
+
+        # /!\ Phase check should be done after all odd permutations
+        ## Check if this additional index phase is a multiple of 2
+        #if additionalIndex.jphase % 2 != 0:
+        #    return
+
+        # Check if this additional index has a (2j+1) factor
+        if additionalIndex.jhat != 2:
+            return
+
+        # Put the additional index at a particular position
+        ninej.place_index_in_position(additionalIndex,2)
+        for ksixj,sixj in enumerate(sixjs):
+            position = sixj.indices.index(additionalIndex)
+            col  = position%3
+            line = position//3
+            if line != 0:
+                sixj.permute_lines_for_columns(col,(col+1)%3)
+            if col != 2:
+                sixj.permute_columns(col,2)
+
+        # Put other indices in canonical position
+        sixj1 = sixjs[0]
+        sixj2 = sixjs[1]
+
+        # Already placed indices (j2,j10)
+        idx2  = sixj1.indices[5]
+        idx10 = sixj2.indices[5]
+
+        # ...
+
+
+
+
+        # Create 12j(I)-symbol
+        idx1 = self.sixjs[0].indices[0]
+        self.twelvejfirsts.append(TwelveJFirst(idx1,idx2,idx1,idx1,idx1,idx1,idx1,idx1,idx1,idx10,idx1,idx1))
 

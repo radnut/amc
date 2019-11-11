@@ -448,6 +448,7 @@ def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermuta
                 # /!\ should be done before the addition of additional indices to indices list
                 if factorize_ninej:
                     Y.factorize_ninejs()
+                    Y.factorize_twelvejfirsts()
 
                 # Add Y.additionalIndices to indices and interIndices
                 interIndices.extend(Y.additionalIndices)
