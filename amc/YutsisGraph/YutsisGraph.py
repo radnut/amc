@@ -859,11 +859,6 @@ class YutsisGraph:
             return
         ninej = ninejs[0]
 
-        # /!\ Phase check should be done after all odd permutations
-        ## Check if this additional index phase is a multiple of 2
-        #if additionalIndex.jphase % 2 != 0:
-        #    return
-
         # Check if this additional index has a (2j+1) factor
         if additionalIndex.jhat != 2:
             return
@@ -887,12 +882,62 @@ class YutsisGraph:
         idx2  = sixj1.indices[5]
         idx10 = sixj2.indices[5]
 
-        # ...
+        #
+        if sixj1.indices[0] not in ninej.indices:
+            sixj1.permute_lines_for_columns(0,1)
+        if sixj1.indices[0] not in ninej.indices[:2]:
+            ninej.reflection_second_diagonal()
+        if sixj1.indices[0] != ninej.indices[1]:
+            ninej.permute_columns(0,1)
+        idx3 = sixj1.indices[0]
+        idx1 = sixj1.indices[1]
+        idx5 = sixj1.indices[3]
+        idx6 = sixj1.indices[4]
 
+        # Check if this additional index phase is a multiple of 2
+        # (Check done after possible reflection because the phase might change)
+        if additionalIndex.jphase % 2 != 0:
+            return
 
+        #if sixj1.indices[0] not in ninej.indices or sixj1.indices[1] not in ninej.indices:
+        #    print("Error: 12j(I) factorization impossible")
 
+        #
+        if sixj2.indices[0] not in ninej.indices:
+            sixj2.permute_lines_for_columns(0,1)
+        if sixj2.indices[0] not in ninej.indices[5::3]:
+            print("Error: ")
+        if sixj2.indices[0] != ninej.indices[5]:
+            sixj2.permute_columns(0,1)
+        if False:
+            print("Error: ")
+        idx9  = sixj2.indices[0]
+        idx11 = sixj2.indices[1]
+
+        # Indices from 9j-coefficient
+        idx8  = ninej.indices[3]
+        idx4  = ninej.indices[4]
+        idx12 = ninej.indices[6]
+        idx7  = ninej.indices[7]
+
+        # Add a phase factor
+        idx1.jphase  += 1
+        idx3.jphase  += 1
+        idx9.jphase  -= 1
+        idx11.jphase -= 1
+
+        # Remove additional index
+        additionalIndex.simplify()
+        self.sign *= additionalIndex.sign
+        self.additionalIndices.remove(additionalIndex)
+
+        # Remove ninej
+        self.ninejs.remove(ninej)
+
+        # Remove sixjs
+        self.sixjs.remove(sixj1)
+        self.sixjs.remove(sixj2)
 
         # Create 12j(I)-symbol
-        idx1 = self.sixjs[0].indices[0]
-        self.twelvejfirsts.append(TwelveJFirst(idx1,idx2,idx1,idx1,idx1,idx1,idx1,idx1,idx1,idx10,idx1,idx1))
+        self.twelvejfirsts.append(TwelveJFirst(idx1,idx2,idx3,idx4,idx5,idx6,idx7,idx8,idx9,idx10,idx11,idx12))
 
