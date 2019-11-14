@@ -21,7 +21,6 @@ def parse_command_line():
     parser.add_argument('-p', '--permute', choices=['yes', 'no', 'smart'], default='smart',
                       help='Permute tensor indices to find simpler formulas. `smart\' tries only the ones that are probable to succeed.')
     parser.add_argument('--factorize_ninej', action='store_true', help='Factorize 9j-coefficients.')
-    parser.add_argument('--factorize_twelvej', action='store_true', help='Factorize 12j-coefficients.')
     parser.add_argument('--print_threej', action='store_true', help='Print 3j-coefficients.')
     parser.add_argument('--select_equation', default=None,
                       help='Select a specific equation (Use for debuging purpose).')

@@ -903,14 +903,14 @@ class YutsisGraph:
         idx6 = sixj1.indices[4]
 
         # Check if this additional index phase is a multiple of 2
-        # (Check done after possible reflection because the phase might change)
+        # (Check done after possible reflection or permute columns because the phase might change)
         if additionalIndex.jphase % 2 != 0:
             return
 
         # Prepare second sixj and two indices of the ninej
         if sixj2.indices[0] not in ninej.indices:
             sixj2.permute_lines_for_columns(0,1)
-        if sixj2.indices[0] != ninej.indices[5]:
+        if sixj2.indices[4] != sixj1.indices[3]:
             sixj2.permute_columns(0,1)
         if sixj2.indices[0] != ninej.indices[5] or sixj2.indices[1] != ninej.indices[8]:
             print("Error: 12j(I) factorization impossible")
