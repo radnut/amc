@@ -96,6 +96,30 @@ class NineJ:
         # Add the phase factor
         self.add_permutation_phase()
 
+    def reflection_first_diagonal(self):
+        """Perform reflection over the first diagonal"""
+
+        # { j1 j2 j3 }   { j1 j4 j7 }
+        # { j4 j5 j6 } = { j2 j5 j8 }
+        # { j7 j8 j9 }   { j3 j6 j9 }
+
+        # Permutes indices
+        self.permute_indices(1,3)
+        self.permute_indices(2,6)
+        self.permute_indices(5,7)
+
+    def reflection_second_diagonal(self):
+        """Perform reflection over the second diagonal"""
+
+        # { j1 j2 j3 }   { j9 j6 j3 }
+        # { j4 j5 j6 } = { j8 j5 j2 }
+        # { j7 j8 j9 }   { j7 j4 j1 }
+
+        # Permutes indices
+        self.permute_indices(0,8)
+        self.permute_indices(1,5)
+        self.permute_indices(3,7)
+
     @classmethod
     def getPreamble(cls):
         """Get the newcommand line for Latex output"""
