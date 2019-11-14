@@ -92,12 +92,18 @@ def main():
     # Verbose option
     verbose = run_arguments.verbose > 0
 
+    # If 12j factorization then 9j factorization
+    factorize_ninej   = run_arguments.factorize_ninej
+    factorize_twelvej = run_arguments.factorize_twelvej
+    if factorize_twelvej:
+        factorize_ninej = True
+
     # Start computing
     print("Running...")
     start_time = datetime.datetime.now()
 
     # Angular-momentum reduction
-    amc.AMCReduction.AMCReduction(equations, output_file, doPermutations=permute, doSmartPermutations=permute_smart, verbose=verbose, print_threej=run_arguments.print_threej, factorize_ninej=run_arguments.factorize_ninej, keqnMaster=select_equation, ktermMaster=select_term, kpermMaster=select_permutation)
+    amc.AMCReduction.AMCReduction(equations, output_file, doPermutations=permute, doSmartPermutations=permute_smart, verbose=verbose, print_threej=run_arguments.print_threej, factorize_ninej=factorize_ninej, factorize_twelvej=factorize_twelvej, keqnMaster=select_equation, ktermMaster=select_term, kpermMaster=select_permutation)
 
     print("Time elapsed: %s.\n" % (datetime.datetime.now() - start_time))
 
