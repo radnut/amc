@@ -683,7 +683,7 @@ class YutsisGraph:
             self.factorize_ninej(addIndex)
 
     def factorize_ninej(self,additionalIndex):
-        """ /!\ Factorize 9j-symbols from a given list of 6j-symbols"""
+        """Factorize 9j-symbols from a given list of 6j-symbols and an additional index"""
 
         # { idx1 idx2 idx3 }
         # { idx4 idx5 idx6 }                          { idx1 idx4 idx7 } { idx2 idx5 idx8 } { idx3 idx6 idx9 }
@@ -735,6 +735,7 @@ class YutsisGraph:
         else:
             sixj1.permute_lines_for_columns(0,1)
 
+        # Second sixj preparation
         # j8
         idx8 = sixj1.indices[3]
         try:
@@ -759,6 +760,7 @@ class YutsisGraph:
             if position != 3:
                 print("Error: ninej factorization failed")
 
+        # Third sixj preparation
         # j1
         idx1 = sixj1.indices[0]
         try:
@@ -828,7 +830,7 @@ class YutsisGraph:
             self.factorize_twelvejfirst(addIndex)
 
     def factorize_twelvejfirst(self,additionalIndex):
-        """ /!\ Factorize 12j(I)-symbols from a given list of 6j-symbols and 9j-symbols"""
+        """Factorize 12j(I)-symbols from a given list of 6j-symbols and 9j-symbols and an additional index"""
 
         #                    {j1  j2   j3   j4   }
         #                    {  j5   j6   j7   j8}
@@ -881,14 +883,20 @@ class YutsisGraph:
         # Already placed indices (j2,j10)
         idx2  = sixj1.indices[5]
         idx10 = sixj2.indices[5]
+        if idx2 in sixj2.indices or idx2 in ninej.indices:
+            print("Error: 12j(I) factorization impossible")
+        if idx10 in sixj1.indices or idx10 in ninej.indices:
+            print("Error: 12j(I) factorization impossible")
 
-        #
+        # Prepare first sixj and two indices of the ninej
         if sixj1.indices[0] not in ninej.indices:
             sixj1.permute_lines_for_columns(0,1)
         if sixj1.indices[0] not in ninej.indices[:2]:
             ninej.reflection_second_diagonal()
         if sixj1.indices[0] != ninej.indices[1]:
             ninej.permute_columns(0,1)
+        if sixj1.indices[0] != ninej.indices[1] or sixj1.indices[1] != ninej.indices[0]:
+            print("Error: 12j(I) factorization impossible")
         idx3 = sixj1.indices[0]
         idx1 = sixj1.indices[1]
         idx5 = sixj1.indices[3]
@@ -899,26 +907,31 @@ class YutsisGraph:
         if additionalIndex.jphase % 2 != 0:
             return
 
-        #if sixj1.indices[0] not in ninej.indices or sixj1.indices[1] not in ninej.indices:
-        #    print("Error: 12j(I) factorization impossible")
-
-        #
+        # Prepare second sixj and two indices of the ninej
         if sixj2.indices[0] not in ninej.indices:
             sixj2.permute_lines_for_columns(0,1)
-        if sixj2.indices[0] not in ninej.indices[5::3]:
-            print("Error: ")
         if sixj2.indices[0] != ninej.indices[5]:
             sixj2.permute_columns(0,1)
-        if False:
-            print("Error: ")
+        if sixj2.indices[0] != ninej.indices[5] or sixj2.indices[1] != ninej.indices[8]:
+            print("Error: 12j(I) factorization impossible")
         idx9  = sixj2.indices[0]
         idx11 = sixj2.indices[1]
+        if sixj2.indices[4] != idx5 or sixj2.indices[3] != idx6:
+            print("Error: 12j(I) factorization impossible")
 
         # Indices from 9j-coefficient
         idx8  = ninej.indices[3]
         idx4  = ninej.indices[4]
         idx12 = ninej.indices[6]
         idx7  = ninej.indices[7]
+        if idx8 in sixj1.indices or idx8 in sixj2.indices:
+            print("Error: 12j(I) factorization impossible")
+        if idx4 in sixj1.indices or idx8 in sixj2.indices:
+            print("Error: 12j(I) factorization impossible")
+        if idx12 in sixj1.indices or idx8 in sixj2.indices:
+            print("Error: 12j(I) factorization impossible")
+        if idx7 in sixj1.indices or idx8 in sixj2.indices:
+            print("Error: 12j(I) factorization impossible")
 
         # Add a phase factor
         idx1.jphase  += 1
