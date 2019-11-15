@@ -3,7 +3,7 @@
 from copy import copy
 from sympy import Rational
 from sys import stdout
-from amc.AMCFunctions import deltaReduction,partition,applyPermutation
+from amc.AMCFunctions import deltaReduction,partition,applyPermutation,smartPermutations
 from amc.AMCLatexFile import AMCLatexFile
 from amc.JTensor import JTensor
 from amc.MTensor import MTensor
@@ -59,201 +59,9 @@ def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermuta
 
             # Do smart permutations
             if doSmartPermutations:
-
-                # Add Left and Right indices of the LHS tensor
-                allIndices = [extIndices[:keqnI],extIndices[keqnI:]]
-
-                # Loop over RHS tensors
-                for amp in amplitudes:
-
-                    # Amplitude I, J and indices
-                    ampI = amp[1]
-                    ampJ = amp[2]
-                    ampIndices = amp[3]
-
-                    # Add Left and Right indices of the tensor
-                    allIndices.append(ampIndices[:ampI])
-                    allIndices.append(ampIndices[ampI:])
-
-                prelimPerm = [list(range(len(amp))) for amp in allIndices[2:]]
-                alreadyPlaced = [0 for amp in allIndices[2:]]
-                for kamp1,amp1 in enumerate(allIndices):
-
-                    # If already treated once then no other treatment
-                    if kamp1-2 >= 0 and alreadyPlaced[kamp1-2] != 0:
-                        continue
-
-                    # I,J
-                    ampI1,ampJ1 = len(allIndices[kamp1-kamp1%2]),len(allIndices[kamp1-kamp1%2+1])
-
-                    for kamp2,amp2 in enumerate(allIndices):
-
-                        # Consider all couples only one time
-                        if kamp2 < kamp1+1+(kamp1+1)%2:
-                            continue
-
-                        # If already treated once then no other treatment
-                        if kamp1-2 >= 0 and alreadyPlaced[kamp1-2] != 0:
-                            break
-
-                        # If already treated once then no other treatment
-                        if kamp2-2 >= 0 and alreadyPlaced[kamp2-2] != 0:
-                            continue
-
-                        # I,J
-                        ampI2,ampJ2 = len(allIndices[kamp2-kamp2%2]),len(allIndices[kamp2-kamp2%2+1])
-
-                        # Get list of common indices
-                        common = []
-                        for idx1 in amp1:
-                            for idx2 in amp2:
-                                if idx1 == idx2:
-                                    common.append(idx1)
-
-                        # Amplitude 0 left part
-                        # Can not be permuted so dictates the permutation of the other amplitude
-                        if kamp1 == 0:
-
-                            ## Two-body external
-                            ##40 k1 k2 | k3 k4 0 1 2 3
-                            ##31 k1 k2 | k3    0 1
-                            ##22 k1 k2 |       0 1
-                            ##13 k1    |        no
-                            ##04       |        no
-                            #if ampI1+ampJ1 == 4:
-                            #    if ampI1 >= 2 and amp1[0] in common and amp1[1] in common:
-                            #        common = amp1[0:2]
-                            #    elif ampI1 >= 4 and amp1[2] in common and amp1[3] in common:
-                            #        common = amp1[2:4]
-                            #    else:
-                            #        common = []
-
-                            ## Three-body external
-                            ##60 k1 k2 k3 | k4 k5 k6 0 1 3 4
-                            ##51 k1 k2 k3 | k4 k5    0 1 3 4
-                            ##42 k1 k2 k3 | k4       0 1
-                            ##33 k1 k2 k3 |          0 1
-                            ##24 k1 k2    |          0 1
-                            ##15 k1       |           no
-                            ##06          |           no
-                            #if ampI1+ampJ1 == 6:
-                            #    if ampI1 >= 2 and amp1[0] in common and amp1[1] in common:
-                            #        common = amp1[0:2]
-                            #    elif ampI1 >= 5 and amp1[3] in common and amp1[4] in common:
-                            #        common = amp1[3:5]
-                            #    else:
-                            #        common = []
-
-                            # A-body external
-                            if ampI1+ampJ1 >= 4:
-                                if ampI1 >= 2 and amp1[0] in common and amp1[1] in common:
-                                    common = amp1[0:2]
-                                elif ampI1 >= (ampI1+ampJ1)//2 + 2 and amp1[(ampI1+ampJ1)//2] in common and amp1[(ampI1+ampJ1)//2+1] in common:
-                                    common = amp1[(ampI1+ampJ1)//2:(ampI1+ampJ1)//2+2]
-                                else:
-                                    common = []
-
-                        elif kamp1 == 1:
-
-                            ## Two-body external
-                            ##40       |        no
-                            ##31       |    k1  no
-                            ##22       | k1 k2 0 1
-                            ##13    k1 | k2 k3 1 2
-                            ##04 k1 k2 | k3 k4 2 3 0 1
-                            #if ampI1+ampJ1 == 4:
-                            #    if ampJ1 >= 2 and amp1[ampJ1-2] in common and amp1[ampJ1-2+1] in common:
-                            #        common = amp1[ampJ1-2:ampJ1]
-                            #    elif ampJ1 >= 4 and amp1[ampJ1-4] in common and amp1[ampJ1-4+1] in common:
-                            #        common = amp1[ampJ1-4:ampJ1-2]
-                            #    else:
-                            #        common = []
-
-                            ## Three-body external
-                            ##60          |           no
-                            ##51          |       k1  no
-                            ##42          |    k1 k2  no
-                            ##33          | k1 k2 k3 0 1
-                            ##24       k1 | k2 k3 k4 1 2
-                            ##15    k1 k2 | k3 k4 k5 2 3
-                            ##06 k1 k2 k3 | k4 k5 k6 3 4 0 1
-                            #if ampI1+ampJ1 == 6:
-                            #    if ampJ1 >= 3 and amp1[ampJ1-3] in common and amp1[ampJ1-3+1] in common:
-                            #        common = amp1[ampJ1-3:ampJ1-1]
-                            #    elif ampJ1 >= 6 and amp1[ampJ1-6] in common and amp1[ampJ1-6+1] in common:
-                            #        common = amp1[ampJ1-6:ampJ1-4]
-                            #    else:
-                            #        common = []
-
-                            # A-body external
-                            if ampI1+ampJ1 >= 4:
-                                if ampJ1 >= (ampI1+ampJ1)//2 and amp1[ampJ1-(ampI1+ampJ1)//2] in common and amp1[ampJ1-(ampI1+ampJ1)//2+1] in common:
-                                    common = amp1[ampJ1-(ampI1+ampJ1)//2:ampJ1-(ampI1+ampJ1)//2+2]
-                                elif ampJ1 >= (ampI1+ampJ1) and amp1[ampJ1-(ampI1+ampJ1)] in common and amp1[ampJ1-(ampI1+ampJ1)+1] in common:
-                                    common = amp1[ampJ1-(ampI1+ampJ1):ampJ1-(ampI1+ampJ1)+2]
-                                else:
-                                    common = []
-
-                        # If at least two common indices
-                        if len(common) >= 2:
-
-                            # Get position of common indices
-                            perm1 = []
-                            perm2 = []
-                            for k in range(2):
-                                for k1,idx1 in enumerate(amp1):
-                                    if idx1 == common[k]:
-                                        perm1.append(k1)
-                                        break
-                                for k2,idx2 in enumerate(amp2):
-                                    if idx2 == common[k]:
-                                        perm2.append(k2)
-                                        break
-
-                            # If LHS for amp1
-                            if kamp1%2 == 0:
-                                # Indices fixed to the left and other to the right
-                                perm1.extend([k for k in range(ampI1) if k not in perm1])
-
-                            # Else RHS for amp1
-                            else:
-                                if ampI1 >= (ampI1+ampJ1)//2:
-                                    # Indices fixed to the left and other to the right
-                                    perm1.extend([k for k in range(ampJ1) if k not in perm1])
-                                else:
-                                    # Indices fixed after rank//2
-                                    temp = [k for k in range(ampJ1) if k not in perm1]
-                                    temp2 = temp[:(ampI1+ampJ1)//2-ampI1]
-                                    temp2.extend(perm1)
-                                    temp2.extend(temp[(ampI1+ampJ1)//2-ampI1:])
-                                    perm1 = temp2
-
-                            # If LHS for amp2
-                            if kamp2%2 == 0:
-                                # Indices fixed to the left and other to the right
-                                perm2.extend([k for k in range(ampI2) if k not in perm2])
-
-                            # Else RHS for amp2
-                            else:
-                                if ampI2 >= (ampI2+ampJ2)//2:
-                                    # Indices fixed to the left and other to the right
-                                    perm2.extend([k for k in range(ampJ2) if k not in perm2])
-                                else:
-                                    # Indices fixed after rank//2
-                                    temp = [k for k in range(ampJ2) if k not in perm2]
-                                    temp2 = temp[:(ampI2+ampJ2)//2-ampI2]
-                                    temp2.extend(perm2)
-                                    temp2.extend(temp[(ampI2+ampJ2)//2-ampI2:])
-                                    perm2 = temp2
-
-                            # If not the LHS amplitude then save the permutation
-                            if kamp1-2 >= 0:
-                                prelimPerm[kamp1-2] = perm1
-                                alreadyPlaced[kamp1-2] +=2
-                            if kamp2-2 >= 0:
-                                prelimPerm[kamp2-2] = perm2
-                                alreadyPlaced[kamp2-2] +=2
-
+                prelimPerm = []
+                alreadyPlaced = []
+                smartPermutations(prelimPerm,alreadyPlaced,extIndices,keqnI,amplitudes)
 
             # Get amplitudes I,J for permutations
             ampPermutations = []
@@ -270,18 +78,6 @@ def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermuta
                 else:
                     ampPermutations.append(ampI)
                     ampPermutations.append(ampJ)
-
-            ## Remove T1,H20,H02 and T3 amplitude for now
-            #doContinue = False
-            #for k in range(len(ampPermutations)//2):
-            ##    if amp.rank == 2 and amp.I != 1:
-            ##        doContinue = True
-            ##        break
-            #    if ampPermutations[2*k] + ampPermutations[2*k+1] == 6:
-            #        doContinue = True
-            #        break
-            #if doContinue:
-            #    continue
 
             # Permutation loop
             if doPermutations:
