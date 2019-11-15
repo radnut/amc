@@ -175,8 +175,8 @@ def smartPermutations(prelimPerm,alreadyPlaced,extIndices,keqnI,amplitudes):
         allIndices.append(ampIndices[:ampI])
         allIndices.append(ampIndices[ampI:])
 
-    prelimPerm = [list(range(len(amp))) for amp in allIndices[2:]]
-    alreadyPlaced = [0 for amp in allIndices[2:]]
+    prelimPerm.extend(list(range(len(amp))) for amp in allIndices[2:])
+    alreadyPlaced.extend(0 for amp in allIndices[2:])
     for kamp1,amp1 in enumerate(allIndices):
 
         # If already treated once then no other treatment
