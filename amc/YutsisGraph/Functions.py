@@ -277,6 +277,9 @@ def YutsisReduction(indices,clebsches,zeroIdx):
     # Create the Yutsis Graph
     Ymain = YutsisGraph(threejms,deltas,zeroIdx)
 
+    # Get single internal line separated graphs
+    Ymain.getSeparatedGraph()
+
     # Get disconnected graphs
     Ylist = Ymain.getDisconnectedGraphs()
 
@@ -295,7 +298,7 @@ def YutsisReduction(indices,clebsches,zeroIdx):
             squareEdges = []
 
             if Y.onecycleSearch(onecycleEdges) != []:
-                print("Error: One-cycle reduction should only follows a two-cycle reduction")
+                print("Error: One-cycle should never appear because single internal line graph are separated")
                 exit(-1)
             elif Y.bubbleSearch(bubbleEdges) != []:
                 Y.bubbleReduction(bubbleEdges[0])

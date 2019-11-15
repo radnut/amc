@@ -118,6 +118,82 @@ class YutsisGraph:
 
         print("Error: Return should occur inside the loop")
 
+    def getSeparatedGraph(self):
+        """Return single internal line separated graph"""
+
+        # Look for single internal lines
+        ygLength = self.n + 1
+        while ygLength > self.n:
+            ygLength = self.n
+            for internalLine in self.edges:
+                nodes = [internalLine.nodes[0]]
+                edges = []
+                for node in nodes:
+                    for edge in node.edges:
+                        if edge not in edges and edge != internalLine:
+                            edges.append(edge)
+                            for edgeNode in edge.nodes:
+                                if edgeNode not in nodes:
+                                    nodes.append(edgeNode)
+
+                # If the number of nodes is odd it means that the internal line
+                # is a single internal line and one can perform separation
+                if len(nodes) % 2 != 0:
+                    self.singleInternalLineSeparation(internalLine)
+                    break
+
+    def singleInternalLineSeparation(self,edgeInt):
+        """Separate graphs linked by a single internal line"""
+
+        # Get internal nodes
+        nodeInt1 = edgeInt.nodes[0]
+        nodeInt2 = edgeInt.nodes[1]
+
+        # Get external edges
+        edgeExt1 = []
+        edgeExt2 = []
+        for edge in nodeInt1.edges:
+            if edge != edgeInt:
+                edgeExt1.append(edge)
+        for edge in nodeInt2.edges:
+            if edge != edgeInt:
+                edgeExt2.append(edge)
+
+        # Make edgeExt1[0] as incoming and edgeExt1[1] as outgoing
+        if edgeExt1[0].getOutgoing() == nodeInt1:
+            edgeExt1[0].changeDirection()
+        if edgeExt1[1].getIncoming() == nodeInt1:
+            edgeExt1[1].changeDirection()
+
+        # Make edgeExt2[0] as incoming and edgeExt2[1] as outgoing
+        if edgeExt2[0].getOutgoing() == nodeInt2:
+            edgeExt2[0].changeDirection()
+        if edgeExt2[1].getIncoming() == nodeInt2:
+            edgeExt2[1].changeDirection()
+
+        # Set the appropriate node signs
+        if edgeExt1[0] == nodeInt1.firstOfTwo(edgeExt1[0],edgeExt1[1]):
+            nodeInt1.changeSign('direct')
+        if edgeExt2[0] == nodeInt2.firstOfTwo(edgeExt2[0],edgeExt2[1]):
+            nodeInt2.changeSign('direct')
+
+        # Add J hat factor
+        edgeExt1[0].idx.jhat -= 1
+        edgeExt2[0].idx.jhat -= 1
+
+        # Create deltas
+        self.deltas.append(Delta(edgeExt1[0].idx,edgeExt1[1].idx))
+        self.deltas.append(Delta(edgeExt2[0].idx,edgeExt2[1].idx))
+        self.deltas.append(Delta(self.zeroIdx,edgeInt.idx))
+
+        # Remove the single internal line
+        self.n -= 1
+        self.edges.remove(edgeInt)
+        self.nodes.remove(nodeInt1)
+        self.nodes.remove(nodeInt2)
+        self.mergeEdges(edgeExt1[1],edgeExt1[0])
+        self.mergeEdges(edgeExt2[1],edgeExt2[0])
+
     def merge(self,Y):
         """Merge Y into self"""
 
@@ -246,63 +322,6 @@ class YutsisGraph:
         # Return squareEdges
         return squareEdges
 
-    def oneCycleReduction(self,edgeIncoming,edgeOutgoing):
-        """Remove a 1-cycle from the graph"""
-
-        # Get the internal node of the one-cycle
-        nodeInt = edgeOutgoing.getOutgoing()
-        if(nodeInt != edgeIncoming.getIncoming()):
-            print("Error: Outgoing and incoming nodes of one-cycle edge should be the same")
-
-        # Get the internal edge
-        for edge in nodeInt.edges:
-            if edge not in [edgeIncoming,edgeOutgoing]:
-                edgeInt = edge
-                break
-
-        # Get the external node
-        for node in edgeInt.nodes:
-            if node != nodeInt:
-                nodeExt = node
-                break
-
-        # Get the two external edges
-        for edge in nodeExt.edges:
-            if edge not in [edgeInt]:
-                edgeExt1 = edge
-                break
-        for edge in nodeExt.edges:
-            if edge not in [edgeInt,edgeExt1]:
-                edgeExt2 = edge
-                break
-
-        # Make edgeExt1 as incoming and edgeExt2 as outgoing
-        if edgeExt1.getOutgoing() == nodeExt:
-            edgeExt1.changeDirection()
-        if edgeExt2.getIncoming() == nodeExt:
-            edgeExt2.changeDirection()
-
-        # Set the appropriate node signs
-        if edgeIncoming == nodeInt.firstOfTwo(edgeIncoming,edgeOutgoing):
-            nodeInt.changeSign('direct')
-        if edgeExt1 == nodeExt.firstOfTwo(edgeExt1,edgeExt2):
-            nodeInt.changeSign('direct')
-
-        # Add J hat factor
-        edgeIncoming.idx.jhat += 1
-        edgeExt1.idx.jhat -= 1
-
-        # Create deltas
-        self.deltas.append(Delta(edgeExt1.idx,edgeExt2.idx))
-        self.deltas.append(Delta(self.zeroIdx,edgeInt.idx))
-
-        # Remove the one-cycle from the graph
-        self.n -= 1
-        self.edges.remove(edgeInt)
-        self.nodes.remove(nodeInt)
-        self.nodes.remove(nodeExt)
-        self.mergeEdges(edgeExt2,edgeExt1)
-
     def bubbleReduction(self,bubbleEdges):
         """Remove a bubble from the graph"""
 
@@ -356,11 +375,6 @@ class YutsisGraph:
         self.nodes.remove(node2)
         self.edges.remove(edgeA)
         self.edges.remove(edgeB)
-
-        # If lead to one-cycle then proceed to the one-cycle reduction
-        # before merging the two edges (if not then there would be phase indetermination)
-        if edgeExt1.getIncoming() == edgeExt2.getOutgoing():
-            self.oneCycleReduction(edgeExt1,edgeExt2)
 
         # Create the delta
         self.deltas.append(Delta(edgeExt1.idx,edgeExt2.idx))
