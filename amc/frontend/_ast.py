@@ -113,7 +113,12 @@ class TensorDeclaration(AST):
     def get_drudge_desc(self):
         name = self.attrs.get('latex', self.name)
 
-        return [ '{{{}}}'.format(name), self.mode[0], self.mode[1] ]
+        # Julien:
+        # Use the integer self.rank to set on or off non-scalar.
+        # rank  = 0 => boolean = True  for scalar
+        # rank != 0 => boolean = False for non-scalar
+
+        return [ '{{{}}}'.format(name), self.mode[0], self.mode[1], not self.rank]
 
 
 class Equation(AST):

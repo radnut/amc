@@ -169,7 +169,7 @@ def smartPermutations(prelimPerm,alreadyPlaced,extIndices,keqnI,amplitudes):
         # Amplitude I, J and indices
         ampI = amp[1]
         ampJ = amp[2]
-        ampIndices = amp[3]
+        ampIndices = amp[4]
 
         # Add Left and Right indices of the tensor
         allIndices.append(ampIndices[:ampI])

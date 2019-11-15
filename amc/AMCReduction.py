@@ -7,7 +7,7 @@ from amc.AMCFunctions import deltaReduction,partition,applyPermutation,smartPerm
 from amc.AMCLatexFile import AMCLatexFile
 from amc.JTensor import JTensor
 from amc.MTensor import MTensor
-from amc.YutsisGraph import Idx,YutsisReduction
+from amc.YutsisGraph import Idx,YutsisReduction,ClebschGordan
 
 def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermutations=False, verbose=False, print_threej=False, factorize_ninej=False, keqnMaster=None, ktermMaster=None, kpermMaster=None):
     # Print Latex - Preamble
@@ -31,13 +31,8 @@ def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermuta
         # Informations about LHS and all terms of the corresponding equation
         keqnLHS,eqn = eqnAll
 
-        # Tex, I and J for LHS
-        #/!\ kScalar
-        if len(keqnLHS) == 4:
-            keqnTex,keqnI,keqnJ,extIndices = keqnLHS
-            kScalar = True
-        else:
-            keqnTex,keqnI,keqnJ,extIndices,kScalar = keqnLHS
+        # Tex, I, J, scalar for LHS
+        keqnTex,keqnI,keqnJ,kScalar,extIndices = keqnLHS
 
         TEX.addString((r'\section{{Equation {}}}''\n').format(keqn))
 
@@ -51,7 +46,7 @@ def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermuta
             amplitudes = term[2]
             sumIndices = []
             for amp in amplitudes:
-                ampIndices = amp[3]
+                ampIndices = amp[4]
                 sumIndices.extend([idx for idx in ampIndices if idx not in extIndices and idx not in sumIndices])
             sumIndices.sort()
             drudgeindices = copy(extIndices)
@@ -135,9 +130,8 @@ def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermuta
                     ampSymb = amp[0]
                     ampI = amp[1]
                     ampJ = amp[2]
-                    ampIndices = [partindices[tensorIdx-1] for tensorIdx in amp[3]]
-                    #/!\ not that good...
-                    ampScalar = amp[4] if len(amp)==5 else True
+                    ampScalar = amp[3]
+                    ampIndices = [partindices[tensorIdx-1] for tensorIdx in amp[4]]
 
                     # Append to the list
                     newAmplitudes.append(MTensor(ampIndices,ampI,ampJ,ampSymb,ampScalar))
