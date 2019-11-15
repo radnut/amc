@@ -14,6 +14,12 @@ declare T2 {
     latex="t"
 }
 
+# Zero tensor for external coupling
+declare ZERO {
+    mode=4,
+    latex="0"
+}
+
 # Fock operator
 declare F {
     mode=2,
@@ -26,18 +32,11 @@ declare H {
     latex="H",
 }
 
-# Energy
+# Energy equation
 DE = sum_ai(F_ia * T1_ai)
    + sum_abij(H_ijab * T1_ai * T1_bj)
    + 1/4 * sum_abij(H_ijab * T2_abij);
 
-# Amplitude equations
-
-## 2nd order
-#E2 = 1/4 * sum_abij(H_abij * H_ijab);
-#
-## 3rd order (pp + hh + ph)
-#E3 = 1/8 * sum_abcdij(H_ijab * H_abcd * H_cdij)
-#   + 1/8 * sum_abijkl(H_ijab * H_klij * H_abkl)
-#   - sum_abcijk(H_ijab * H_kbic * H_ackj);
+# One term of CCSD amplitude equations
+ZERO_abij = sum_klcd(H_klcd * T1_dj * T1_ak * T2_cbil);
 

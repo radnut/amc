@@ -1,0 +1,19 @@
+declare E3 {
+    mode=0,
+    latex="E^{(3)}_{0}",
+}
+
+declare E3square {
+    mode=0,
+    latex="(E^{(3)}_{0})^{2}",
+}
+
+declare H {
+    mode=4,
+    latex="H",
+}
+
+E3 = sum_abcijk(H_ijab * H_kbic * H_ackj);
+
+E3square = sum_abcijkdeflmn(H_ijab * H_kbic * H_ackj * H_lmde * H_nelf * H_dfnm);
+

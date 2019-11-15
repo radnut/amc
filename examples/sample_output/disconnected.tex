@@ -1,0 +1,25 @@
+\documentclass[11pt]{article}
+\usepackage[left=1cm,right=1cm,top=1.5cm,bottom=1cm,includeheadfoot]{geometry}
+\usepackage{amsmath}
+\allowdisplaybreaks
+
+\newcommand{\clebsch}[6]{C_{#1 #2,#3 #4}^{#5 #6}}
+\newcommand{\sixj}[6]{\begingroup\setlength{\arraycolsep}{0.2em}\begin{Bmatrix} #1 & #2 & #3 \\ #4 & #5 & #6 \end{Bmatrix}_{\text{6j}}\endgroup}
+\newcommand{\threej}[3]{\{#1,#2,#3\}}
+\newcommand{\ninej}[9]{\begingroup\setlength{\arraycolsep}{0.2em}\begin{Bmatrix} #1 & #2 & #3 \\ #4 & #5 & #6 \\ #7 & #8 & #9 \end{Bmatrix}_{\text{9j}}\endgroup}
+
+\begin{document}
+
+\section{Equation 0}
+$\left({E^{(3)}_{0}}\right)_{1}$:
+\begin{align}
+\sum_{{k}_{1}{k}_{2}{k}_{3}{k}_{4}{k}_{5}{k}_{6}}{H}_{{k}_{4}{k}_{5}{k}_{1}{k}_{2}}{H}_{{k}_{6}{k}_{2}{k}_{4}{k}_{3}}{H}_{{k}_{1}{k}_{3}{k}_{6}{k}_{5}}&\rightarrow \notag \\\sum_{\tilde{k}_{1}\tilde{k}_{2}\tilde{k}_{3}\tilde{k}_{4}\tilde{k}_{5}\tilde{k}_{6}J^{(1)}J^{(2)}J^{(3)}}\hat{J^{(1)}}^{2}\hat{J^{(2)}}^{2}\hat{J^{(3)}}^{2}& \notag \\{}^{J^{(1)}}\tilde{H}_{\tilde{k}_{4}\tilde{k}_{5}\tilde{k}_{1}\tilde{k}_{2}}{}^{J^{(2)}}\tilde{H}_{\tilde{k}_{6}\tilde{k}_{2}\tilde{k}_{4}\tilde{k}_{3}}{}^{J^{(3)}}\tilde{H}_{\tilde{k}_{1}\tilde{k}_{3}\tilde{k}_{6}\tilde{k}_{5}}& \notag \\\ninej{j_{{k}_{1}}}{j_{{k}_{3}}}{J^{(3)}}{j_{{k}_{2}}}{J^{(2)}}{j_{{k}_{6}}}{J^{(1)}}{j_{{k}_{4}}}{j_{{k}_{5}}}
+\end{align}
+
+\section{Equation 1}
+$\left({(E^{(3)}_{0})^{2}}\right)_{1}$:
+\begin{align}
+\sum_{{k}_{1}{k}_{2}{k}_{3}{k}_{4}{k}_{5}{k}_{6}{k}_{7}{k}_{8}{k}_{9}{k}_{10}{k}_{11}{k}_{12}}{H}_{{k}_{7}{k}_{8}{k}_{1}{k}_{2}}{H}_{{k}_{9}{k}_{2}{k}_{7}{k}_{3}}{H}_{{k}_{1}{k}_{3}{k}_{9}{k}_{8}}{H}_{{k}_{10}{k}_{11}{k}_{4}{k}_{5}}{H}_{{k}_{12}{k}_{5}{k}_{10}{k}_{6}}{H}_{{k}_{4}{k}_{6}{k}_{12}{k}_{11}}&\rightarrow \notag \\\sum_{\tilde{k}_{1}\tilde{k}_{2}\tilde{k}_{3}\tilde{k}_{4}\tilde{k}_{5}\tilde{k}_{6}\tilde{k}_{7}\tilde{k}_{8}\tilde{k}_{9}\tilde{k}_{10}\tilde{k}_{11}\tilde{k}_{12}J^{(1)}J^{(2)}J^{(3)}J^{(4)}J^{(5)}J^{(6)}}\hat{J^{(1)}}^{2}\hat{J^{(2)}}^{2}\hat{J^{(3)}}^{2}\hat{J^{(4)}}^{2}\hat{J^{(5)}}^{2}\hat{J^{(6)}}^{2}& \notag \\{}^{J^{(1)}}\tilde{H}_{\tilde{k}_{7}\tilde{k}_{8}\tilde{k}_{1}\tilde{k}_{2}}{}^{J^{(2)}}\tilde{H}_{\tilde{k}_{9}\tilde{k}_{2}\tilde{k}_{7}\tilde{k}_{3}}{}^{J^{(3)}}\tilde{H}_{\tilde{k}_{1}\tilde{k}_{3}\tilde{k}_{9}\tilde{k}_{8}}{}^{J^{(4)}}\tilde{H}_{\tilde{k}_{10}\tilde{k}_{11}\tilde{k}_{4}\tilde{k}_{5}}{}^{J^{(5)}}\tilde{H}_{\tilde{k}_{12}\tilde{k}_{5}\tilde{k}_{10}\tilde{k}_{6}}{}^{J^{(6)}}\tilde{H}_{\tilde{k}_{4}\tilde{k}_{6}\tilde{k}_{12}\tilde{k}_{11}}& \notag \\\ninej{j_{{k}_{1}}}{j_{{k}_{3}}}{J^{(3)}}{j_{{k}_{2}}}{J^{(2)}}{j_{{k}_{9}}}{J^{(1)}}{j_{{k}_{7}}}{j_{{k}_{8}}}\ninej{j_{{k}_{4}}}{j_{{k}_{6}}}{J^{(6)}}{j_{{k}_{5}}}{J^{(5)}}{j_{{k}_{12}}}{J^{(4)}}{j_{{k}_{10}}}{j_{{k}_{11}}}
+\end{align}
+
+\end{document}
