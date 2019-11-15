@@ -11,13 +11,10 @@ class Delta:
         # Sort according to tex of jtex
         self.sortAccordingToTex()
 
-        # Apply the delta
-        self.apply()
-
     def sortAccordingToTex(self):
         """Sort indices"""
 
-        self.indices.sort(key = lambda idx: ((0 if idx.zero else 1),(0 if idx.partIdx else 1),len(idx.jtex),idx.jtex))
+        self.indices.sort(key = lambda idx: ((0 if idx.zero else 1),(0 if idx.external else 1),(0 if idx.partIdx else 1),len(idx.jtex),idx.jtex))
 
     def apply(self):
         """Apply the delta"""

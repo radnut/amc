@@ -39,12 +39,20 @@ def deltaReduction(Y,jschAmplitudes):
                     deltaList.append(deltapp)
 
         # Sort the list of deltas
-        for dlt in deltaList:
-            dlt.sortAccordingToTex()
+        #for dlt in deltaList:
+        #    dlt.sortAccordingToTex()
         deltaList.sort(key = lambda dlt: ((0 if dlt.indices[0].zero else 1),(0 if dlt.indices[0].external else 1),(0 if dlt.indices[0].partIdx else 1),len(dlt.indices[0].jtex),dlt.indices[0].jtex))
 
         # Get surviving index
         survivingIdx = deltaList[0].indices[0]
+
+        # Apply delta to indices
+        # 1) The ones not containing survivingIdx
+        # 2) The ones containing survivingIdx
+        for dlt in [delta for delta in deltaList if survivingIdx not in delta.indices]:
+            dlt.apply()
+        for dlt in [delta for delta in deltaList if survivingIdx in delta.indices]:
+            dlt.apply()
 
         # Get list of all other indices
         idxList = []
