@@ -179,11 +179,14 @@ def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermuta
 
                 # Jhat factor from the coupling of the LHS
                 # Summation over diagonal M because considered tensors are not dependent on it
-                #/!\ convention not wigner eckart (with wigner eckart -1 instead of -2, see p. 132 of thesis)
-                if amp0.rank == 2:
-                    amp0.indices[0].jhat -= 2
-                if amp0.rank >= 4:
-                    amp0.diagonalIdx.jhat -= 2
+                # Convention not wigner eckart 1/jhat^2
+                # Convention wigner eckart 1/jhat (see p. 132 of thesis)
+                # but already included when get the CG coefficient
+                if amp0.scalar:
+                    if amp0.rank == 2:
+                        amp0.indices[0].jhat -= 2
+                    if amp0.rank >= 4:
+                        amp0.diagonalIdx.jhat -= 2
 
                 # Convert MScheme amplitudes into JScheme amplitudes
                 jAmplitudes = []
@@ -206,8 +209,7 @@ def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermuta
                         tensorIndices.append(amp.tensorIdx)
                     clebsches.extend(amp.getClebsches())
 
-                #/!\ Special case
-                # Add clebsches of tensorial product
+                # Special case: Add clebsches of tensorial product
                 if len(tensorIndices)==2:
                     clebsches.append(ClebschGordan([tensorIndices[0],tensorIndices[1],amp0.tensorIdx],[1,1,1]))
 
@@ -234,7 +236,7 @@ def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermuta
                     print("Error: Yutsis graph not fully reduced so continue")
                     continue
 
-                # /!\ ninej (optimization does account for ninej)
+                # /!\ ninej (optimization does not account for ninej)
                 # /!\ should be done before the addition of additional indices to indices list
                 if factorize_ninej:
                     Y.factorize_ninejs()

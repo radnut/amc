@@ -44,13 +44,12 @@ class JTensor(MTensor):
         idxType = 'int' if self.rank % 4 == 0 else 'hint'
         if self.rank >= 4:
             self.diagonalIdx = Idx(idxType,None,_jtex='J^{(%i)}'%(tensorId),_mtex='M^{(%i)}'%(tensorId),_external=self.external)
+            if not self.scalar:
+                self.diagonalIdx2 = Idx(idxType,None,_jtex='J^{(%i)\'}'%(tensorId),_mtex='M^{(%i)\'}'%(tensorId),_external=self.external)
 
         # Set tensorial index (if not scalar)
         if not self.scalar:
             self.tensorIdx = Idx('int',None,_jtex='\\lambda^{(%i)}'%(tensorId2),_mtex='\\mu^{(%i)}'%(tensorId2),_external=self.external)
-            idxType = 'int' if self.rank % 4 == 0 else 'hint'
-            if self.rank >= 4:
-                self.diagonalIdx2 = Idx(idxType,None,_jtex='J^{(%i)\'}'%(tensorId),_mtex='M^{(%i)\'}'%(tensorId),_external=self.external)
 
     def getClebsches(self):
         """Get single-particle phases, jhat factors and Clebsch-Gordan coefficients
@@ -59,51 +58,50 @@ class JTensor(MTensor):
         # Create empty list of clebsches
         clebsches = []
 
-        # If one-body operator
-        if self.rank == 2:
-            clebsches = self.getOneBodyClebsches()
+        # Get tensorial clebsch
+        if self.rank == 2 or not self.scalar:
+            clebsches.extend(self.getTensorialClebsch())
 
         # If A-body operator (A>=2)
         if self.rank >= 4:
-            clebsches = self.getABodyClebsches()
-
-        # Get tensorial clebsch
-        if self.rank >= 4 and not self.scalar:
-            clebsches.append(self.getTensorialClebsch())
+            clebsches.extend(self.getABodyClebsches())
 
         # Return clebsches
         return clebsches
 
     def getTensorialClebsch(self):
-
-        return ClebschGordan([self.diagonalIdx2,self.tensorIdx,self.diagonalIdx],[1,1,1])
-
-    def getOneBodyClebsches(self):
         """Get single-particle phases, jhat factors and Clebsch-Gordan coefficients
         related to the angular-momentum coupled-form of a one-body operator"""
 
         # Notice that O^{20} and O^{02} have the same recoupling coefficient
         # (O^{20} = O^{02 \, \ast} if O is hermitian)
 
-        # Get the two indices
-        idx1 = self.indices[0]
-        idx2 = self.indices[1]
+        # Get indices
+        if self.rank == 2:
+            idx1 = self.indices[0]
+            idx2 = self.indices[1]
+            tensorIdx = None
+        else:
+            idx1 = self.diagonalIdx
+            idx2 = self.diagonalIdx2
+            tensorIdx = self.tensorIdx
 
-        # Add jhat factor
-        idx1.jhat += 1
+        # Wigner-Eckart jhat
+        if not self.scalar:
+            self.diagonalIdx.jhat -= 1
 
         # Add single-particle phase
-        if self.I == 1 and self.J == 1:
+        if self.rank == 2 and not (self.I == 1 and self.J == 1):
             idx1.jphase += 1
             idx1.mphase -= 1
 
         # Get clebsch signs
         signs = [1,1,1]
-        if self.I == 1 and self.J == 1:
-            signs = [1,-1,1]
+        if self.rank == 2 and not (self.I == 1 and self.J == 1):
+            signs = [-1,1,1]
 
         # Return list of clebsches
-        return [ClebschGordan([idx1,idx2,None],signs)]
+        return [ClebschGordan([idx2,tensorIdx,idx1],signs)]
 
     def getABodyClebsches(self):
         """Get single-particle phases, jhat factors and Clebsch-Gordan coefficients
@@ -180,8 +178,8 @@ class JTensor(MTensor):
         # Return list of clebsches
         return clebsches
 
-    def __str__(self):
-        """Return LaTeX string"""
+    def print_non_wigner_eckart(self):
+        """Non wigner-eckart"""
 
         # LaTeX string
         texStr = ""
@@ -235,4 +233,68 @@ class JTensor(MTensor):
             texStr += self.after
 
         return texStr
+
+    def print_wigner_eckart(self):
+        """Wigner-eckart"""
+
+        # LaTeX string
+        texStr = ""
+
+        # Bra side
+        if len(self.indices) != 0:
+            texStr += "("
+            leftindices = self.indices[:self.rank//2]
+            for k,idx in enumerate(leftindices):
+                if self.rank == 2:
+                    texStr += "n_{%s}"%(idx.tex)
+                else:
+                    if idx.hasbeendelta == None:
+                        texStr += "\\tilde%s"%(idx.tex)
+                    else:
+                        if idx.hasbeendelta.tex != None:
+                            texStr += "n_{%s}(ljt)_{%s}"%(idx.tex,idx.hasbeendelta.tex)
+                        else:
+                            texStr += "(nlt)_{%s}%s"%(idx.tex,idx.hasbeendelta.jtex)
+                if k != 0 and k != len(leftindices)-1:
+                    texStr += self.interIndices[k-1].jtex
+            texStr += self.diagonalIdx.jtex if self.diagonalIdx.hasbeendelta == None else self.diagonalIdx.hasbeendelta.jtex
+
+        # LaTeX symbol and diagonal index
+        texStr += "|"
+        texStr += self.symbol
+        texStr += "{}^{%s}"%(self.tensorIdx.jtex if self.tensorIdx.hasbeendelta == None else self.tensorIdx.hasbeendelta.jtex)
+        texStr += "|"
+
+        # Ket side
+        if len(self.indices) != 0:
+            rightindices = self.indices[self.rank//2:]
+            for k,idx in enumerate(rightindices):
+                if self.rank == 2:
+                    texStr += "n_{%s}"%(idx.tex)
+                else:
+                    if idx.hasbeendelta == None:
+                        texStr += "\\tilde%s"%(idx.tex)
+                    else:
+                        if idx.hasbeendelta.tex != None:
+                            texStr += "n_{%s}(ljt)_{%s}"%(idx.tex,idx.hasbeendelta.tex)
+                        else:
+                            texStr += "(nlt)_{%s}%s"%(idx.tex,idx.hasbeendelta.jtex)
+                if k != 0 and k != len(leftindices)-1:
+                    texStr += self.interIndices[k-1+self.rank//2-2].jtex
+            texStr += self.diagonalIdx2.jtex if self.diagonalIdx2.hasbeendelta == None else self.diagonalIdx2.hasbeendelta.jtex
+            texStr += ")"
+
+        # After
+        if self.after != None:
+            texStr += self.after
+
+        return texStr
+
+    def __str__(self):
+        """Return LaTeX string"""
+
+        if self.scalar:
+            return self.print_non_wigner_eckart()
+        else:
+            return self.print_wigner_eckart()
 
