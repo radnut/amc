@@ -7,3 +7,6 @@
 /build
 /dist
 /old_*
+
+/amc/frontend/_parsetab.py
+/amc/frontend/_lextab.py
