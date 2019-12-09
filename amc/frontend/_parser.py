@@ -163,7 +163,7 @@ class Parser:
         self.lexer = Lexer(optimize=optimize, debug=lexdebug, lextab=_lextab, **kwargs)
 
         self.tokens = self.lexer.tokens
-        self.parser = yacc.yacc(module=self, optimize=optimize, debug=lexdebug, tabmodule=_parsetab, **kwargs)
+        self.parser = yacc.yacc(module=self, optimize=optimize, debug=parsedebug, tabmodule=_parsetab, **kwargs)
 
     def parse(self, text, debug=0):
         self.parser.parse(
