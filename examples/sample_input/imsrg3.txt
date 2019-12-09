@@ -60,7 +60,7 @@ C3_pqrstu = P(pq/r)*P(st/u) * sum_a(A2_pqsa * B2_artu - B2_pqsa * A2_artu);
 C3_pqrstu =
     1/6 * sum_abc((n_a*n_b*n_c + nbar_a*nbar_b*nbar_c) * (A3_pqrabc * B3_abcstu - B3_pqrabc * A3_abcstu))
     + 1/2 * P(pq/r) * P(st/u)
-        * sum_abc((n_a*n_b*nbar_c + nbar_a*nbar_b*n_c) * (A3_pqcabu * B3_abrstc - B3_pqcabu * A3_abrstc));
+        * sum_abc((n_a*n_b*nbar_c - nbar_a*nbar_b*n_c) * (A3_pqcabu * B3_abrstc - B3_pqcabu * A3_abrstc));
 
 # 2.3 [2,3](3)
 C3_pqrstu =
