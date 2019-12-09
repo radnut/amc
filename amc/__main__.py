@@ -29,7 +29,7 @@ def main():
             equations = pickle.load(fp)
     else:
         # Text
-        parser = amc.frontend.Parser(optimize=0)
+        parser = amc.frontend.Parser(optimize=True)
         with open(run_arguments.source) as f:
             parser.parse(f.read(), debug=0)
         if run_arguments.verbose > 0:
