@@ -10,6 +10,22 @@ or
 from setuptools import setup, find_packages
 import amc
 
+import distutils.command.build_py
+
+# Override build_py command.
+class BuildPyCommand(distutils.command.build_py.build_py):
+    def run(self):
+        distutils.command.build_py.build_py.run(self)
+
+        # Build lex and parser tabs.
+        import amc.frontend
+        import os.path
+
+        outputdir = os.path.join(self.build_lib, 'amc', 'frontend')
+        amc.frontend.Parser(outputdir=outputdir)
+
+        self.byte_compile((os.path.join(outputdir, '_parsetab.py'), os.path.join(outputdir, '_lextab.py')))
+
 setup(
         name     = "amc",
         version  = "0.1",
@@ -26,9 +42,11 @@ setup(
 
         entry_points=dict(
             console_scripts=[
-                "amc = amc.main:main"
+                "amc = amc.__main__:main"
             ]
         ),
+
+        cmdclass={"build_py": BuildPyCommand},
 )
 
 #import sys

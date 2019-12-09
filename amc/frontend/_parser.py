@@ -160,10 +160,10 @@ class Parser:
             _lextab = '_lextab'
             _parsetab = '_parsetab'
 
-        self.lexer = Lexer(optimize=optimize, debug=lexdebug, lextab=_lextab)
+        self.lexer = Lexer(optimize=optimize, debug=lexdebug, lextab=_lextab, **kwargs)
 
         self.tokens = self.lexer.tokens
-        self.parser = yacc.yacc(module=self, optimize=optimize, debug=lexdebug, tabmodule=_parsetab)
+        self.parser = yacc.yacc(module=self, optimize=optimize, debug=lexdebug, tabmodule=_parsetab, **kwargs)
 
     def parse(self, text, debug=0):
         self.parser.parse(
