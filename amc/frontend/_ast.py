@@ -22,6 +22,61 @@ class AST(object):
         self._kids[i] = val
 
 
+class ASTTraverser(object):
+    @staticmethod
+    def traverse(root, preaction=(lambda n, **k: None), postaction=(lambda n, r, **k: None)):
+        stack = [ (root, 'pre', None) ]
+
+        results = []
+
+        while stack:
+
+            node, state, params = stack.pop()
+
+            if state == 'pre':
+                if params is not None:
+                    params = preaction(node, **params)
+                else:
+                    params = preaction(node)
+
+                stack.append((node, 'post', (params, results)))
+                results = []
+
+                if isinstance(node, AST):
+                    for child in reversed(node):
+                        stack.append((child, 'pre', params))
+            elif state == 'post':
+                params, parent_results = params
+                if params is not None:
+                    result = postaction(node, results, **params)
+                else:
+                    result = postaction(node, results)
+
+                results = parent_results
+                results.append(result)
+
+        return results[0]
+
+    def start(self, root):
+        default_pre = getattr(self, 'default', lambda n, **k: None)
+        default_post = getattr(self, 'default_exit', lambda n, r, **k: None)
+
+        def _pre(n):
+            if hasattr(n, 'type'):
+                method = getattr(self, 'n_' + n.type, default_pre)
+            else:
+                method = default_pre
+            method(n)
+        def _post(n, r):
+            if hasattr(n, 'type'):
+                method = getattr(self, 'n_' + n.type + '_exit', default_post)
+            else:
+                method = default_post
+            return method(n, r)
+
+        return self.traverse(root, preaction=_pre, postaction=_post)
+
+
 class TensorDeclaration(AST):
     def __init__(self, name, mode, rank=0, diagonal=False, scheme=None, **kwargs):
         super(TensorDeclaration, self).__init__('declare')
