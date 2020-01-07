@@ -1,13 +1,15 @@
+from __future__ import (division, absolute_import, print_function)
+
 
 class ThreeJ:
     """3j-symbol class"""
 
-    def __init__(self,idx1,idx2,idx3):
+    def __init__(self, idx1, idx2, idx3):
         """Constructor method"""
 
         # J indices
         # { idx1 idx2 idx3 }
-        self.indices = (idx1,idx2,idx3)
+        self.indices = (idx1, idx2, idx3)
 
     @classmethod
     def getPreamble(cls):
@@ -18,9 +20,8 @@ class ThreeJ:
     def __str__(self):
         """Generate the corresponding LaTeX code"""
 
-        threejTex = "\\threej"
+        threejTex = r"\threej"
         for idx in self.indices:
-            threejTex += "{%s}"%(idx.jtex)
+            threejTex += "{%s}" % (idx.name)
 
         return threejTex
-

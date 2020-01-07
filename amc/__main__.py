@@ -1,22 +1,26 @@
 """Main routine of the Angular Momentum Coupling."""
 
+from __future__ import (division, absolute_import, print_function)
+
 import os.path
 import pickle
 import datetime
 import amc.run
 import amc.frontend
 import amc.AMCReduction
+import amc.glue.reduction
+
 
 def main():
     """Launch the AMC program."""
 
     print(
-        "#############################\n"
-        + "# Angular Momentum Coupling #\n"
-        + "#           v0.1            #\n"
-        + "#                           #\n"
-        + "#      by AMC Dev Team      #\n"
-        + "#############################\n"
+        "% #############################\n"
+        "% # Angular Momentum Coupling #\n"
+        "% #           v0.1            #\n"
+        "% #                           #\n"
+        "% #      by AMC Dev Team      #\n"
+        "% #############################\n"
     )
 
     # Parse command line
@@ -25,7 +29,7 @@ def main():
     # Input file
     if run_arguments.binary:
         # Binary
-        with open(run_arguments.source,"rb") as fp:
+        with open(run_arguments.source, "rb") as fp:
             equations = pickle.load(fp)
     else:
         # Text
@@ -54,7 +58,8 @@ def main():
                 print(eqn_expanded.to_drudge())
                 print()
                 print()
-        equations = [ eqn.to_drudge() for eqn in parser.equations ]
+        # equations = [ eqn.to_drudge() for eqn in parser.equations ]
+        equations = parser.equations
 
     # Output file
     if run_arguments.output is None:
@@ -79,8 +84,8 @@ def main():
         permute_smart = False
 
     # Select options
-    select_equation    = run_arguments.select_equation
-    select_term        = run_arguments.select_term
+    select_equation = run_arguments.select_equation
+    select_term = run_arguments.select_term
     select_permutation = run_arguments.select_permutation
     if select_equation is not None:
         select_equation = int(select_equation)
@@ -96,15 +101,23 @@ def main():
     factorize_ninej = run_arguments.factorize_ninej
 
     # Start computing
-    print("Running...")
+    print("% Running...")
     start_time = datetime.datetime.now()
 
+    results = []
+
     # Angular-momentum reduction
-    amc.AMCReduction.AMCReduction(equations, output_file, doPermutations=permute, doSmartPermutations=permute_smart, verbose=verbose, print_threej=run_arguments.print_threej, factorize_ninej=factorize_ninej, keqnMaster=select_equation, ktermMaster=select_term, kpermMaster=select_permutation)
+    # amc.AMCReduction.AMCReduction(equations, output_file, doPermutations=permute, doSmartPermutations=permute_smart, verbose=verbose, print_threej=run_arguments.print_threej, factorize_ninej=factorize_ninej, keqnMaster=select_equation, ktermMaster=select_term, kpermMaster=select_permutation)
+    for equation in equations:
+        res = amc.glue.reduction.reduce_equation(equation)
+        results.append(res)
 
-    print("Time elapsed: %s.\n" % (datetime.datetime.now() - start_time))
+    print(amc.frontend.to_latex_document(results))
 
-    print("AMC ended successfully!")
+    print("%% Time elapsed: %s.\n" % (datetime.datetime.now() - start_time))
+
+    print("% AMC ended successfully!")
+
 
 if __name__ == "__main__":
     main()

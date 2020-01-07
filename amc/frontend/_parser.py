@@ -4,10 +4,11 @@ import re
 import fractions
 
 from ._ply import (lex, yacc)
-from ._ast import (TensorDeclaration, Equation, Variable, Add, Mul, Sum, Permute)
+from ._ast import (TensorDeclaration, Index, Equation, Variable, Add, Mul, Sum, Permute)
 
 
 class LexerError(Exception):
+
     def __init__(self, token, line, col):
         self._token = token
         self._line = line
@@ -17,7 +18,9 @@ class LexerError(Exception):
         val = self._token.value.splitlines()[0]
         return "Lexical error at or near `%s' (line %d:%d)" % (val, self._line, self._col)
 
+
 class ParserError(Exception):
+
     def __init__(self, msg, line, col):
         self._msg = msg.format(line=line, col=col)
         self._line = line
@@ -26,10 +29,12 @@ class ParserError(Exception):
     def __str__(self):
         return self._msg
 
+
 class ParserSyntaxError(ParserError):
+
     def __init__(self, token, line, col):
         if token is not None:
-            msg = "Syntax error at or near `%s' token (line {line}:{col})" % (token.type, )
+            msg = "Syntax error at or near `%s' token (line {line}:{col})" % (token.type,)
         elif self._line is not None:
             msg = "Syntax error at or near line {line}"
         else:
@@ -38,17 +43,22 @@ class ParserSyntaxError(ParserError):
         super(ParserSyntaxError, self).__init__(msg, line, col)
         self._token = token
 
+
 class UnknownTensorError(ParserError):
+
     def __init__(self, name, line, col):
         msg = "Unknown tensor `%s' (line {line}:{col})" % (name,)
         super(UnknownTensorError, self).__init__(msg, line, col)
         self._name = name
 
+
 class SubscriptError(ParserError):
+
     def __init__(self, tensor, msg, line, col):
         msg = "%s (line {line}:{col})" % (msg,)
         super(SubscriptError, self).__init__(msg, line, col)
         self._tensor = tensor
+
 
 class Lexer:
     tokens = (
@@ -64,7 +74,7 @@ class Lexer:
 
     reserved = {'declare': 'DECLARE', 'sum': 'SUM', }
 
-    literals = ( '+', '-', '*', '/', ';', '(', ')', '{', '}', '=', ',', '^', )
+    literals = ('+', '-', '*', '/', ';', '(', ')', '{', '}', '=', ',', '^',)
 
     t_ignore_COMMENT = r'\#.*'
     t_ignore = ' \t'
@@ -85,7 +95,7 @@ class Lexer:
                 sets.append(set(match.group(1).split()))
             else:
                 sets.append(set(match.group(1)))
-            val = val[match.end()+1:]
+            val = val[match.end() + 1:]
 
         t.value = tuple(sets)
         return t
@@ -101,7 +111,7 @@ class Lexer:
         return t
 
     def t_SUBSCRIPT(self, t):
-        r'_[a-z0-9]+|_\{[a-z0-9 ]*\}'
+        r'_[a-z0-9]+|_\{[a-z0-9_ ]*\}'
         if re.match(r'_[a-z0-9]+', t.value):
             t.value = tuple(iter(t.value[1:]))
         else:
@@ -138,7 +148,9 @@ class Lexer:
         last_cr = self.lexer.lexdata.rfind('\n', 0, lexpos)
         return lexpos - last_cr
 
+
 class Parser:
+
     def __init__(self, optimize=True, **kwargs):
         self.tensors = {}
         self.equations = []
@@ -164,6 +176,8 @@ class Parser:
 
         self.tokens = self.lexer.tokens
         self.parser = yacc.yacc(module=self, optimize=optimize, debug=parsedebug, tabmodule=_parsetab, **kwargs)
+
+        self._subscripts = {}
 
     def parse(self, text, debug=0):
         self.parser.parse(
@@ -206,6 +220,7 @@ class Parser:
         rhs = p[3]
 
         self.equations.append(Equation(var, rhs))
+        self._subscripts = {}
 
     def p_kvlist(self, p):
         '''
@@ -297,7 +312,6 @@ class Parser:
             node = Add([p[1], term])
         p[0] = node
 
-
     def p_term(self, p):
         '''
         term : term '*' factor
@@ -309,13 +323,11 @@ class Parser:
             node = Mul([p[1], p[3]])
         p[0] = node
 
-
     def p_factor_paren(self, p):
         '''
         factor : '(' expression ')'
         '''
         p[0] = p[2]
-
 
     def p_factor_fraction(self, p):
         '''
@@ -328,7 +340,8 @@ class Parser:
         '''
         factor : SUM SUBSCRIPT '(' expression ')'
         '''
-        p[0] = Sum(p[2], p[4])
+        p[0] = Sum(self._to_indices(p[2]), p[4])
+        self._remove_indices(p[2])
 
     def p_factor_variable(self, p):
         '''
@@ -336,7 +349,6 @@ class Parser:
         factor : permute
         '''
         p[0] = p[1]
-
 
     def p_variable(self, p):
         '''
@@ -346,7 +358,7 @@ class Parser:
         if len(p) == 2:
             subscripts = ()
         else:
-            subscripts = p[2]
+            subscripts = self._to_indices(p[2])
 
         if p[1] not in self.tensors:
             raise UnknownTensorError(p[1], p.lineno(1), self.lexer.find_column(p.lexpos(1)))
@@ -362,7 +374,7 @@ class Parser:
         '''
         permute : PERM
         '''
-        p[0] = Permute(p[1])
+        p[0] = Permute(self._to_indices(s) for s in p[1])
 
     def p_wholenumber(self, p):
         '''
@@ -386,3 +398,14 @@ class Parser:
         else:
             raise ParserSyntaxError(None, self.lexer.last_token.lineno if self.lexer.last_token is not None else None, 0)
 
+    def _to_indices(self, subscripts):
+        ret = []
+        for subscript in subscripts:
+            if subscript not in self._subscripts:
+                self._subscripts[subscript] = Index(subscript, 'hint', 'part')
+            ret.append(self._subscripts[subscript])
+        return tuple(ret)
+
+    def _remove_indices(self, subscripts):
+        for subscript in subscripts:
+            self._subscripts.pop(subscript, None)

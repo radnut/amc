@@ -1,7 +1,9 @@
 from __future__ import (absolute_import, print_function, division)
 
 import fractions
+
 from . import _util
+
 
 class AST(object):
     __slots__ = ('type', '_kids', 'attr')
@@ -14,8 +16,10 @@ class AST(object):
         if self._kids is None:
             raise IndexError
         return self._kids[i]
+
     def __len__(self):
         return len(self._kids) if self._kids is not None else 0
+
     def __setitem__(self, i, val):
         if self._kids is None:
             self._kids = []
@@ -23,6 +27,12 @@ class AST(object):
 
 
 class ASTTraverser(object):
+
+    class _PruneError(Exception):
+
+        def __init__(self, params=None):
+            self.params = params
+
     @staticmethod
     def traverse(root, preaction=(lambda n, **k: None), postaction=(lambda n, r, **k: None)):
         stack = [ (root, 'pre', None) ]
@@ -34,15 +44,21 @@ class ASTTraverser(object):
             node, state, params = stack.pop()
 
             if state == 'pre':
-                if params is not None:
-                    params = preaction(node, **params)
-                else:
-                    params = preaction(node)
+                prune = False
+
+                try:
+                    if params is not None:
+                        params = preaction(node, **params)
+                    else:
+                        params = preaction(node)
+                except ASTTraverser._PruneError as e:
+                    prune = True
+                    params = e.params
 
                 stack.append((node, 'post', (params, results)))
                 results = []
 
-                if isinstance(node, AST):
+                if isinstance(node, AST) and not prune:
                     for child in reversed(node):
                         stack.append((child, 'pre', params))
             elif state == 'post':
@@ -67,6 +83,7 @@ class ASTTraverser(object):
             else:
                 method = default_pre
             method(n)
+
         def _post(n, r):
             if hasattr(n, 'type'):
                 method = getattr(self, 'n_' + n.type + '_exit', default_post)
@@ -76,8 +93,12 @@ class ASTTraverser(object):
 
         return self.traverse(root, preaction=_pre, postaction=_post)
 
+    def prune(self, params=None):
+        raise ASTTraverser._PruneError(params)
+
 
 class TensorDeclaration(AST):
+
     def __init__(self, name, mode, rank=0, diagonal=False, scheme=None, **kwargs):
         super(TensorDeclaration, self).__init__('declare')
 
@@ -101,16 +122,15 @@ class TensorDeclaration(AST):
             raise ValueError('rank must be a nonnegative (half-)integer')
 
         if scheme is not None:
-            if diagonal:
-                scheme = (scheme,) * 2
-
             if len(scheme) != 2:
                 raise ValueError('scheme must be a 2-tuple')
 
             scheme = self._check_scheme(scheme, 1, mode[0] + mode[1])
-
         else:
-            scheme = (self._create_scheme(1, mode[0]), self._create_scheme(mode[0] + 1, mode[1]))
+            if mode[0] and mode[1]:
+                scheme = (self._create_scheme(1, mode[0]), self._create_scheme(mode[0] + 1, mode[1]))
+            else:
+                scheme = self._create_scheme(1, max(mode[0], mode[1]))
 
         self.name = name
         self.mode = mode
@@ -150,36 +170,23 @@ class TensorDeclaration(AST):
         if num == 0:
             return ()
 
-        if scheme[0] == 0:
-            return (0, _rec(scheme[1]))
-        elif scheme[1] == 0:
-            return (_rec(scheme[0]), 0)
-        else:
-            return _rec(scheme)
+        return _rec(scheme)
 
     @staticmethod
     def _create_scheme(start, num):
         if num == 0:
-            return 0
-        if num == 1:
+            return ()
+        elif num == 1:
             return start
-        return (TensorDeclaration._create_scheme(start, num-1), start + num-1)
-
-    def get_drudge_desc(self):
-        name = self.attrs.get('latex', self.name)
-
-        # Julien:
-        # Use the integer self.rank to set on or off non-scalar.
-        # rank  = 0 => boolean = True  for scalar
-        # rank != 0 => boolean = False for non-scalar
-
-        return [ '{{{}}}'.format(name), self.mode[0], self.mode[1], not self.rank]
+        else:
+            return (TensorDeclaration._create_scheme(start, num - 1), start + num - 1)
 
 
 class Equation(AST):
+
     def __init__(self, lhs, rhs):
         super(Equation, self).__init__('equation')
-        if not isinstance(lhs, Variable):
+        if not isinstance(lhs, (Variable, ReducedVariable)):
             raise ValueError('left-hand side of equation must be a variable')
 
         if hasattr(rhs, 'depends_on') and lhs.depends_on < rhs.depends_on:
@@ -201,78 +208,59 @@ class Equation(AST):
             return self
         return Equation(self.lhs, new_rhs)
 
-    def expand(self, keep_single=True):
-        new_rhs = self.rhs.expand(keep_single)
+    def expand(self, keep_diagonal=True):
+        new_rhs = self.rhs.expand(keep_diagonal)
         if id(new_rhs) == id(self.rhs):
             return self
         return Equation(self.lhs, new_rhs)
 
-    def to_drudge(self):
-        subscript_map = {}
-        for s in self.lhs.subscripts:
-            subscript_map[s] = len(subscript_map) + 1
 
-        rhs = self.rhs.expand_permutations().expand()
+class Index(object):
 
-        if isinstance(rhs, Add):
-            terms = rhs
-        else:
-            terms = [ rhs ]
+    def __init__(self, name, type, class_):
+        if type not in ('int', 'hint'):
+            raise ValueError("Type must be 'int' or 'hint'")
 
-        drudge_list = []
-        for term in terms:
-            term_subscript_map = dict(subscript_map)
+        if class_ not in ('am', 'part'):
+            raise ValueError("Type must be 'am' or 'part'")
 
-            prefactor = fractions.Fraction(1)
-            drudge_term = []
+        self.name = str(name)
+        self.type = type
+        self.class_ = class_
+        self.constrained_to = None
 
-            def _handle_term(t):
-                nonlocal prefactor
-                if isinstance(t, Mul):
-                    for tt in t:
-                        _handle_term(tt)
-                if isinstance(t, (int, fractions.Fraction)):
-                    prefactor *= t
-                if isinstance(t, Sum):
-                    for s in sorted(t.subscripts):
-                        term_subscript_map[s] = len(term_subscript_map) + 1
+    def __str__(self):
+        return self.name
 
-                    if len(t[0]) == 0:
-                        sumterms = [ t[0] ]
-                    else:
-                        assert isinstance(t[0], Mul)
-                        sumterms = t[0]
+    def __repr__(self):
+        return self.name
 
-                    for st in sumterms:
-                        _handle_term(st)
-                elif isinstance(t, Variable):
-                    if len(t.subscripts) <= 1:
-                        return
-
-                    drudge_term.append(t.to_drudge(term_subscript_map))
-
-            _handle_term(term)
-            drudge_list.append([prefactor.numerator, prefactor.denominator, drudge_term])
-
-        return [self.lhs.to_drudge(subscript_map), drudge_list]
-
+    @staticmethod
+    def coupled_type(i1, i2):
+        if (i1.type == 'hint' and i2.type == 'hint') or (i1.type == 'int' and i2.type == 'int'):
+            return 'int'
+        return 'hint'
 
 
 class Variable(AST):
+
     def __init__(self, tensor, subscripts):
         super(Variable, self).__init__('variable')
 
-        if (not tensor.diagonal and len(subscripts) != tensor.totalmode) or (tensor.diagonal and len(subscripts) != tensor.totalmode//2):
+        if (not tensor.diagonal and len(subscripts) != tensor.totalmode) or (tensor.diagonal and len(subscripts) != tensor.totalmode // 2):
             raise ValueError(
                 'Expected {totalmode} subscripts on tensor "{name}", got {nsubscripts}'.format(
-                    totalmode=(tensor.totalmode if not tensor.diagonal else tensor.totalmode//2), name=tensor.name, nsubscripts=len(subscripts)))
+                    totalmode=(tensor.totalmode if not tensor.diagonal else tensor.totalmode // 2), name=tensor.name, nsubscripts=len(subscripts)))
 
         self.tensor = tensor
-        self.subscripts = subscripts
-        self.depends_on = set(subscripts)
+        self.subscripts = tuple(subscripts)
+        self.depends_on = set(self.subscripts)
+
+        if any(not isinstance(i, Index) for i in self.subscripts):
+            raise ValueError('subscripts must be AST indices.')
 
     def __str__(self):
-        return '{0}_{{{1}}}'.format(self.tensor.name, ' '.join(self.subscripts))
+        return '{0}_{{{1}}}'.format(self.tensor.name, ' '.join(map(str, self.subscripts)))
 
     def apply_permutation(self, i, j):
         ij = {i, j}
@@ -285,11 +273,161 @@ class Variable(AST):
         new_subscripts = tuple(subst.get(s, s) for s in self.subscripts)
         return Variable(self.tensor, new_subscripts)
 
-    def to_drudge(self, subscript_map):
-        return self.tensor.get_drudge_desc() + [[ subscript_map[s] for s in self.subscripts ]]
+
+class ReducedVariable(AST):
+
+    def __init__(self, tensor, subscripts, labels):
+        super(ReducedVariable, self).__init__('reducedvariable')
+
+        if (not tensor.diagonal and len(subscripts) != tensor.totalmode) or (tensor.diagonal and len(subscripts) != tensor.totalmode // 2):
+            raise ValueError(
+                'Expected {totalmode} subscripts on tensor "{name}", got {nsubscripts}'.format(
+                    totalmode=(tensor.totalmode if not tensor.diagonal else tensor.totalmode // 2), name=tensor.name, nsubscripts=len(subscripts)))
+
+        self.tensor = tensor
+        self.subscripts = tuple(subscripts)
+        self.labels = tuple(labels)
+        self.depends_on = set(self.subscripts) | set(self.labels)
+
+        if any(not isinstance(i, Index) for i in self.subscripts):
+            raise ValueError('subscripts must be AST indices.')
+
+        if any(not isinstance(l, Index) for l in self.labels):
+            raise ValueError('labels must be AST indices.')
+
+    def __str__(self):
+        return '{0}_{{{1}}}^{{{2}}}'.format(self.tensor.name, ' '.join(map(str, self.subscripts)), ' '.join(map(str, self.labels)))
+
+    def apply_permutation(self, i, j):
+        ij = {i, j}
+
+        if ij.isdisjoint(self.depends_on):
+            return self
+
+        subst = {i: j, j: i}
+
+        new_subscripts = tuple(subst.get(s, s) for s in self.subscripts)
+        return Variable(self.tensor, new_subscripts)
+
+
+class ThreeJ(AST):
+
+    def __init__(self, indices):
+        super(ThreeJ, self).__init__('threej')
+
+        self.indices = tuple(indices)
+
+        if len(self.indices) != 3:
+            raise ValueError('indices list must have three elements.')
+
+        if any(not isinstance(i, Index) for i in self.indices):
+            raise ValueError('elements of the indices list must be AST indices.')
+
+        if sum(1 if i.type == 'int' else 0 for i in self.indices) not in (1, 3):
+            raise ValueError('incompatible indices (must be of hhi or iii type).')
+
+        self.depends_on = set(self.indices)
+
+    def __str__(self):
+        return 'ThreeJ({})'.format(' '.join(map(str, self.indices)))
+
+
+class SixJ(AST):
+
+    def __init__(self, indices):
+        super(SixJ, self).__init__('sixj')
+
+        self.indices = tuple(indices)
+
+        if len(self.indices) != 6:
+            raise ValueError('indices list must have six elements.')
+
+        if any(not isinstance(i, Index) for i in self.indices):
+            raise ValueError('elements of the indices list must be AST indices.')
+
+        if sum(1 if i.type == 'int' else 0 for i in self.indices) not in (2, 3, 6):
+            raise ValueError('incompatible indices (must be of hhi,hhi; iii,hhh, or iii,iii type).')
+
+        self.depends_on = set(self.indices)
+
+    def __str__(self):
+        return 'SixJ({})'.format(' '.join(map(str, self.indices)))
+
+
+class NineJ(AST):
+
+    def __init__(self, indices):
+        super(NineJ, self).__init__('ninej')
+
+        self.indices = tuple(indices)
+
+        if len(self.indices) != 9:
+            raise ValueError('indices list must have nine elements.')
+
+        if any(not isinstance(i, Index) for i in self.indices):
+            raise ValueError('elements of the indices list must be AST indices.')
+
+        self.depends_on = set(self.indices)
+
+    def __str__(self):
+        return 'NineJ({})'.format(' '.join(map(str, self.indices)))
+
+
+class DeltaJ(AST):
+
+    def __init__(self, a, b):
+        super(DeltaJ, self).__init__('deltaj')
+        self.a = a
+        self.b = b
+        self.depends_on = {a, b}
+
+    def __str__(self):
+        return 'DeltaJ({0!s},{1!s})'.format(self.a, self.b)
+
+
+class HatPhaseFactor(AST):
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __new__(cls, index, hatpower=0, jphase=0, mphase=0, sign=1):
+        if index.type == 'hint':
+            jphase %= 2
+            mphase %= 2
+        else:
+            jphase %= 4
+            mphase %= 4
+
+            if jphase // 2 == 1:
+                sign *= -1
+                jphase -= 2
+
+            if mphase // 2 == 1:
+                sign *= -1
+                mphase -= 2
+
+        if jphase == 0 and mphase == 0 and hatpower == 0:
+            return sign
+
+        obj = super(HatPhaseFactor, cls).__new__(cls)
+        super(HatPhaseFactor, obj).__init__('hatphasefactor')
+        obj.index = index
+        obj.depends_on = {index}
+        obj.hatpower = hatpower
+        obj.jphase = jphase
+        obj.mphase = mphase
+
+        if sign != 1:
+            return Mul([sign, obj])
+        else:
+            return obj
+
+    def __str__(self):
+        return 'hat({0!s}, {1}, {2}j{3:+d}m)'.format(self.index, self.hatpower, self.jphase, self.mphase)
 
 
 class Add(AST):
+
     def __init__(self, terms):
         pass
 
@@ -328,27 +466,28 @@ class Add(AST):
     def __str__(self):
         return ' + '.join(str(k) for k in self)
 
-    def distribute(self, terms, side='right', keep_single=False):
+    def is_diagonal(self):
+
+        def _rec(t):
+            if isinstance(t, Variable):
+                return t.tensor.diagonal
+            elif not isinstance(t, AST):
+                return True
+            else:
+                return all(_rec(tt) for tt in t)
+
+        return _rec(self)
+
+    def distribute(self, terms, side='right', keep_diagonal=True):
         if not terms:
             return self
 
-        if keep_single:
-            def _rec(t):
-                if isinstance(t, Variable):
-                    return len(t.subscripts) > 1
-                elif not isinstance(t, AST):
-                    return False
-                for tt in t:
-                    if _rec(tt):
-                        return True
-                return False
-
-            if not _rec(self):
+        if keep_diagonal:
+            if self.is_diagonal():
                 if side == 'right':
                     return Mul([self] + terms)
                 else:
                     return Mul(terms + [self])
-
 
         if side == 'right':
             new_terms = [ Mul([k] + terms) for k in self ]
@@ -398,12 +537,12 @@ class Add(AST):
         else:
             return self
 
-    def expand(self, keep_single=True):
+    def expand(self, keep_diagonal=True):
         changed = False
         terms = []
         for t in self:
             if hasattr(t, 'expand'):
-                new_term = t.expand(keep_single)
+                new_term = t.expand(keep_diagonal)
                 if id(new_term) != id(t):
                     changed = True
                     terms.append(new_term)
@@ -417,6 +556,7 @@ class Add(AST):
 
 
 class Mul(AST):
+
     def __init__(self, terms):
         pass
 
@@ -516,12 +656,10 @@ class Mul(AST):
         else:
             return self
 
-    def expand(self, keep_single=True):
-        # print('Mul: expanding {}...'.format(self))
-
+    def expand(self, keep_diagonal=True):
         has_distributable_terms = False
 
-        expanded_terms = [ t.expand(keep_single) if hasattr(t, 'expand') else t for t in self ]
+        expanded_terms = [ t.expand(keep_diagonal) if hasattr(t, 'expand') else t for t in self ]
 
         terms_right = []
         for t in reversed(expanded_terms):
@@ -529,10 +667,9 @@ class Mul(AST):
                 has_distributable_terms = True
 
                 if not terms_right:
-                    terms_right .insert(0, t)
+                    terms_right.insert(0, t)
                 else:
-                    #print('Mul: Distribute right: {} over {}'.format(t, terms_right))
-                    distributed = t.distribute(terms_right, 'right', keep_single)
+                    distributed = t.distribute(terms_right, 'right', keep_diagonal)
 
                     if isinstance(distributed, Mul):
                         terms_right = distributed[:]
@@ -542,16 +679,12 @@ class Mul(AST):
                 terms_right.insert(0, t)
 
         if not has_distributable_terms:
-            #print('Mul: expanded {} unchanged (no distributable terms)'.format(self))
             return self
 
-        # print('Mul: terms right: {}'.format(terms_right))
         terms = []
         for t in terms_right:
             if hasattr(t, 'distribute'):
-                #print('Mul: Distribute left: {} revo {}'.format(terms, t))
-
-                distributed = t.distribute(terms, 'left', keep_single)
+                distributed = t.distribute(terms, 'left', keep_diagonal)
 
                 if isinstance(distributed, Mul):
                     terms = distributed[:]
@@ -560,12 +693,11 @@ class Mul(AST):
             else:
                 terms.append(t)
 
-        # print('Mul: expanded {} to {}'.format(self, Mul(terms)))
-
         return Mul(terms)
 
 
 class Sum(AST):
+
     def __init__(self, subscripts, expression):
         pass
 
@@ -615,9 +747,9 @@ class Sum(AST):
             return sumnode
 
     def __str__(self):
-        return 'sum_{{{0}}}({1!s})'.format(' '.join(sorted(self.subscripts)), self[0])
+        return 'sum_{{{0}}}({1!s})'.format(' '.join(sorted(str(s) for s in self.subscripts)), self[0])
 
-    def distribute(self, terms, side='right', keep_single=False):
+    def distribute(self, terms, side='right', keep_diagonal=False):
         if not terms:
             return self
 
@@ -647,11 +779,11 @@ class Sum(AST):
         else:
             return self
 
-    def expand(self, keep_single=True):
+    def expand(self, keep_diagonal=True):
         if not hasattr(self[0], 'expand'):
             return self
 
-        new_expr = self[0].expand(keep_single)
+        new_expr = self[0].expand(keep_diagonal)
         if not isinstance(new_expr, Add):
             if id(new_expr) != id(self[0]):
                 return Sum(self.subscripts, new_expr)
@@ -663,15 +795,20 @@ class Sum(AST):
 
 
 class Permute(AST):
+
     def __init__(self, sets):
         super(Permute, self).__init__('permute')
 
-        if len(sets) == 0:
+        self.sets = tuple(tuple(s) for s in sets)
+
+        if len(self.sets) == 0:
             raise ValueError('need at least one set')
-        elif len(sets) == 1 and len(sets[0]) != 2:
+        elif len(self.sets) == 1 and len(self.sets[0]) != 2:
             raise ValueError('Permutation operators with a single set must only permute two indices')
 
-        self.sets = tuple(sets)
+        if any(not isinstance(i, Index) for s in self.sets for i in s):
+            raise ValueError('sets must consist of sets of AST indices.')
+
         self.depends_on = set()
         for s in sets:
             self.depends_on |= s
@@ -697,7 +834,7 @@ class Permute(AST):
             factors = list(terms)
             prefactor = 1
             for cycle in cycles:
-                prefactor *= (-1)**(len(cycle)-1)
+                prefactor *= (-1) ** (len(cycle) - 1)
 
                 for k in range(len(factors)):
                     if hasattr(factors[k], 'apply_permutation'):
@@ -706,7 +843,6 @@ class Permute(AST):
 
             add_terms.append(Mul([prefactor] + factors))
         return Add(add_terms)
-
 
     def apply_permutation(self, i, j):
         ij = {i, j}

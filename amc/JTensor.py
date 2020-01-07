@@ -1,3 +1,4 @@
+from __future__ import (division, absolute_import, print_function)
 
 from amc.MTensor import MTensor
 from amc.YutsisGraph import ClebschGordan,Idx
@@ -186,7 +187,7 @@ class JTensor(MTensor):
 
         # Diagonal index
         if self.rank == 2:
-            texStr += "{}^{%s}"%(self.indices[0].jtex if self.indices[0].hasbeendelta == None else self.indices[0].hasbeendelta.jtex)
+            texStr += "{}^{%s}"%(self.indices[0].jtex if self.indices[0].constrained_to == None else self.indices[0].constrained_to.jtex)
         elif self.rank >= 4:
             texStr += "{}^{%s}"%(self.diagonalIdx.jtex)
 
@@ -201,13 +202,13 @@ class JTensor(MTensor):
                 if self.rank == 2:
                     texStr += "n_{%s}"%(idx.tex)
                 else:
-                    if idx.hasbeendelta == None:
+                    if idx.constrained_to == None:
                         texStr += "\\tilde%s"%(idx.tex)
                     else:
-                        if idx.hasbeendelta.tex != None:
-                            texStr += "n_{%s}(ljt)_{%s}"%(idx.tex,idx.hasbeendelta.tex)
+                        if idx.constrained_to.tex != None:
+                            texStr += "n_{%s}(ljt)_{%s}"%(idx.tex,idx.constrained_to.tex)
                         else:
-                            texStr += "(nlt)_{%s}%s"%(idx.tex,idx.hasbeendelta.jtex)
+                            texStr += "(nlt)_{%s}%s"%(idx.tex,idx.constrained_to.jtex)
                 if k != 0 and k != len(leftindices)-1:
                     texStr += self.interIndices[k-1].jtex
             if self.rank >= 6:
@@ -217,13 +218,13 @@ class JTensor(MTensor):
                 if self.rank == 2:
                     texStr += "n_{%s}"%(idx.tex)
                 else:
-                    if idx.hasbeendelta == None:
+                    if idx.constrained_to == None:
                         texStr += "\\tilde%s"%(idx.tex)
                     else:
-                        if idx.hasbeendelta.tex != None:
-                            texStr += "n_{%s}(ljt)_{%s}"%(idx.tex,idx.hasbeendelta.tex)
+                        if idx.constrained_to.tex != None:
+                            texStr += "n_{%s}(ljt)_{%s}"%(idx.tex,idx.constrained_to.tex)
                         else:
-                            texStr += "(nlt)_{%s}%s"%(idx.tex,idx.hasbeendelta.jtex)
+                            texStr += "(nlt)_{%s}%s"%(idx.tex,idx.constrained_to.jtex)
                 if k != 0 and k != len(leftindices)-1:
                     texStr += self.interIndices[k-1+self.rank//2-2].jtex
             texStr += "}"
@@ -248,21 +249,21 @@ class JTensor(MTensor):
                 if self.rank == 2:
                     texStr += "n_{%s}"%(idx.tex)
                 else:
-                    if idx.hasbeendelta == None:
+                    if idx.constrained_to == None:
                         texStr += "\\tilde%s"%(idx.tex)
                     else:
-                        if idx.hasbeendelta.tex != None:
-                            texStr += "n_{%s}(ljt)_{%s}"%(idx.tex,idx.hasbeendelta.tex)
+                        if idx.constrained_to.tex != None:
+                            texStr += "n_{%s}(ljt)_{%s}"%(idx.tex,idx.constrained_to.tex)
                         else:
-                            texStr += "(nlt)_{%s}%s"%(idx.tex,idx.hasbeendelta.jtex)
+                            texStr += "(nlt)_{%s}%s"%(idx.tex,idx.constrained_to.jtex)
                 if k != 0 and k != len(leftindices)-1:
                     texStr += self.interIndices[k-1].jtex
-            texStr += self.diagonalIdx.jtex if self.diagonalIdx.hasbeendelta == None else self.diagonalIdx.hasbeendelta.jtex
+            texStr += self.diagonalIdx.jtex if self.diagonalIdx.constrained_to == None else self.diagonalIdx.constrained_to.jtex
 
         # LaTeX symbol and diagonal index
         texStr += "|"
         texStr += self.symbol
-        texStr += "{}^{%s}"%(self.tensorIdx.jtex if self.tensorIdx.hasbeendelta == None else self.tensorIdx.hasbeendelta.jtex)
+        texStr += "{}^{%s}"%(self.tensorIdx.jtex if self.tensorIdx.constrained_to == None else self.tensorIdx.constrained_to.jtex)
         texStr += "|"
 
         # Ket side
@@ -272,16 +273,16 @@ class JTensor(MTensor):
                 if self.rank == 2:
                     texStr += "n_{%s}"%(idx.tex)
                 else:
-                    if idx.hasbeendelta == None:
+                    if idx.constrained_to == None:
                         texStr += "\\tilde%s"%(idx.tex)
                     else:
-                        if idx.hasbeendelta.tex != None:
-                            texStr += "n_{%s}(ljt)_{%s}"%(idx.tex,idx.hasbeendelta.tex)
+                        if idx.constrained_to.tex != None:
+                            texStr += "n_{%s}(ljt)_{%s}"%(idx.tex,idx.constrained_to.tex)
                         else:
-                            texStr += "(nlt)_{%s}%s"%(idx.tex,idx.hasbeendelta.jtex)
+                            texStr += "(nlt)_{%s}%s"%(idx.tex,idx.constrained_to.jtex)
                 if k != 0 and k != len(leftindices)-1:
                     texStr += self.interIndices[k-1+self.rank//2-2].jtex
-            texStr += self.diagonalIdx2.jtex if self.diagonalIdx2.hasbeendelta == None else self.diagonalIdx2.hasbeendelta.jtex
+            texStr += self.diagonalIdx2.jtex if self.diagonalIdx2.constrained_to == None else self.diagonalIdx2.constrained_to.jtex
             texStr += ")"
 
         # After

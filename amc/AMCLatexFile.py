@@ -1,3 +1,4 @@
+from __future__ import (division, absolute_import, print_function)
 
 from sympy import Rational
 from amc.YutsisGraph import ClbLatexFile
@@ -71,18 +72,18 @@ class AMCLatexFile(ClbLatexFile):
             self.addString(str(prefactor))
 
         # Summation
-        if len(sums) != 0 or len([idx for idx in interindices if idx.hasbeendelta == None]) != 0:
+        if len(sums) != 0 or len([idx for idx in interindices if idx.constrained_to == None]) != 0:
             self.addString("\\sum_{")
             for idx in sums:
-                if idx.hasbeendelta == None:
+                if idx.constrained_to == None:
                     self.addString("\\tilde%s"%(idx.tex))
                 else:
-                    if idx.hasbeendelta.tex != None:
+                    if idx.constrained_to.tex != None:
                         self.addString("n_{%s}"%(idx.tex))
                     else:
                         self.addString("(nlt)_{%s}"%(idx.tex))
             for idx in interindices:
-                if idx.hasbeendelta == None:
+                if idx.constrained_to == None:
                     self.addString(idx.jtex)
             self.addString("}")
 

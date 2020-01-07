@@ -1,8 +1,11 @@
+from __future__ import (division, absolute_import, print_function)
 
-from .YutsisGraph import *
+from .YutsisGraph import YutsisGraph
+from .Delta import Delta
 from copy import copy
 
-def zeroLineTreatment(threejms,indices,deltas):
+
+def handle_zero_lines(threejms, indices, deltas):
     """Treat zero line inside 3JM-symbols"""
 
     # /!\ Check here
@@ -24,7 +27,7 @@ def zeroLineTreatment(threejms,indices,deltas):
         # 1) If two indices are equals then the last one is a zero line
         check1done = False
         for threejm in threejms:
-            for k,idx in enumerate(threejm.indices):
+            for k, idx in enumerate(threejm.indices):
 
                 # If two indices are equals
                 if threejm.indices.count(idx) == 2:
@@ -44,7 +47,7 @@ def zeroLineTreatment(threejms,indices,deltas):
                         zeroIdx.zero = True
 
                         # Add delta
-                        deltas.append(Delta(zeroIdx,indices[0]))
+                        deltas.append(Delta(zeroIdx, indices[0]))
 
                         # Check1 completed
                         check1done = True
@@ -65,14 +68,14 @@ def zeroLineTreatment(threejms,indices,deltas):
         # \sum_{m_2} (-1)^{j_2 - m_2} ( m1 -m2  0 ) f(j_2,m_2) = \delta_{j_1 j_2} f(j_1,m_1) / \sqrt{2j_1 + 1}
         check2done = False
         threejmsCopy = copy(threejms)
-        for ktest,threejm in enumerate(threejmsCopy):
-            for k,idx in enumerate(threejm.indices):
+        for ktest, threejm in enumerate(threejmsCopy):
+            for k, idx in enumerate(threejm.indices):
 
                 # If the 3JM-Symbol contains a zero line
                 if idx.zero:
 
                     # Put zero line to the right of the 3JM-Symbol
-                    threejm.exchange(k,2)
+                    threejm.exchange(k, 2)
 
                     # Consider the non-zero indices
                     diffList = [x for x in threejm.indices if not x.zero]
@@ -97,7 +100,7 @@ def zeroLineTreatment(threejms,indices,deltas):
 
                         # For each 3JM-Symbol
                         for threejmp in threejms:
-                            for kp,idxp in enumerate(threejmp.indices):
+                            for kp, idxp in enumerate(threejmp.indices):
 
                                 # Flip the m2 in the projection
                                 # and add the proper phase
@@ -116,10 +119,10 @@ def zeroLineTreatment(threejms,indices,deltas):
 
                     # If first sign negative then permute two first indices
                     if threejm.signs[0] == -1:
-                        threejm.exchange(0,1)
+                        threejm.exchange(0, 1)
 
                     # Add delta
-                    deltas.append(Delta(idx1,idx2))
+                    deltas.append(Delta(idx1, idx2))
 
                     # Get surviving index
                     idx1 = deltas[-1].indices[0]
@@ -130,9 +133,9 @@ def zeroLineTreatment(threejms,indices,deltas):
 
                     # Replace idx2 by idx1 in threejms
                     for threejmp in threejms:
-                        for kp,idxp in enumerate(threejmp.indices):
+                        for kp, idxp in enumerate(threejmp.indices):
                             if idxp == idx2:
-                                threejmp.setIdx(idx1,kp)
+                                threejmp.set_idx(idx1, kp)
 
                     # Remove threejm
                     threejms.remove(threejm)
@@ -149,17 +152,17 @@ def zeroLineTreatment(threejms,indices,deltas):
         # \sum_{m_1} (-1)^{j_1 - m_1} ( m1 -m1  0 ) = \sqrt{2j_1 + 1}
         check3done = False
         threejmsCopy = copy(threejms)
-        for ktest,threejm in enumerate(threejmsCopy):
-            for k,idx in enumerate(threejm.indices):
+        for ktest, threejm in enumerate(threejmsCopy):
+            for k, idx in enumerate(threejm.indices):
 
                 # If the 3JM-Symbol contains a zero line
                 if idx.zero:
 
                     # Put zero line to the right of the 3JM-Symbol
-                    threejm.exchange(k,2)
+                    threejm.exchange(k, 2)
 
                     # Consider the non-zero indices
-                    diffList = list(set(threejm.indices)-set([idx]))
+                    diffList = list(set(threejm.indices) - set([idx]))
                     idx1 = diffList[0]
                     if len(diffList) == 2:
                         print("Error: There should not be 3JM-Symbol of this kind left")
@@ -176,7 +179,7 @@ def zeroLineTreatment(threejms,indices,deltas):
 
                     # If first sign negative then permute two first indices
                     if threejm.signs[0] == -1:
-                        threejm.exchange(0,1)
+                        threejm.exchange(0, 1)
 
                     # Add jhat factor
                     idx1.jhat += 1
@@ -197,7 +200,8 @@ def zeroLineTreatment(threejms,indices,deltas):
             if idx.zero:
                 print("Error: There should not be zero line index left in 3JM-Symbol")
 
-def canonicalization(threejms,indices,deltas):
+
+def canonicalize(threejms, indices, deltas):
     """Put the string of 3JM-symbols into canonical form"""
 
     # Error counter
@@ -211,7 +215,7 @@ def canonicalization(threejms,indices,deltas):
                 indicesAppear[idx] += 1
             else:
                 indicesAppear[idx] = 1
-    for idx,idxAppear in indicesAppear.items():
+    for idx, idxAppear in indicesAppear.items():
         if idxAppear > 2:
             print('Error: Some indices appear more than twice')
         if idxAppear < 2:
@@ -220,24 +224,24 @@ def canonicalization(threejms,indices,deltas):
     # Change sign of angular momentum projections in order
     # to bring the string of 3JM-symbols into canonical form
     outputList = [threejms[0]] if len(threejms) > 0 else []
-    for k,threejm in enumerate(outputList):
+    for k, threejm in enumerate(outputList):
 
         # Consider all 3JM-Symbol but the one of the first loop
-        diffList = list(set(threejms)-set([threejm]))
+        diffList = list(set(threejms) - set([threejm]))
         for threejmp in diffList:
 
             # Loop on the indices of threejm
-            for i,idx in enumerate(threejm.indices):
+            for i, idx in enumerate(threejm.indices):
 
                 # Loop on the indices of threejmp
-                for j,idxp in enumerate(threejmp.indices):
+                for j, idxp in enumerate(threejmp.indices):
 
                     # If the two indices are the same
                     if idx == idxp:
 
                         # If the M projections are the same then flip the ones of threejmp
-                        if threejm.getSign(i) == threejmp.getSign(j):
-                            threejmp.flipSigns()
+                        if threejm.get_sign(i) == threejmp.get_sign(j):
+                            threejmp.flip_signs()
                             # This should not append or inconsistent string of clebsch
                             if threejmp in outputList:
                                 errorCount += 1
@@ -249,7 +253,7 @@ def canonicalization(threejms,indices,deltas):
 
         # Non-connected graph:
         # Add another threejm to outputList and loop
-        if k == len(outputList)-1 and k != len(threejms)-1:
+        if k == len(outputList) - 1 and k != len(threejms) - 1:
             for threejm in threejms:
                 if threejm not in outputList:
                     outputList.append(threejm)
@@ -257,31 +261,32 @@ def canonicalization(threejms,indices,deltas):
 
     # In case of error
     if errorCount != 0:
-        print("Error: In the canonicalization process")
+        print("Error: In the canonicalize process")
 
-def YutsisReduction(indices,clebsches,zeroIdx):
+
+def YutsisReduction(indices, clebsches, zeroIdx, max_iter=100):
     """Proceed to the simplification of the Yutsis graph"""
 
     # Transform Clebsch-Gordan coefficients into 3JM-Symbols
     threejms = []
     for clebsch in clebsches:
-        threejms.append(clebsch.getThreeJMSymbol())
+        threejms.append(clebsch.get_threejm())
 
     # Treat zero line inside 3JM-symbols
     deltas = []
-    zeroLineTreatment(threejms,indices,deltas)
+    handle_zero_lines(threejms, indices, deltas)
 
     # Canonicalization of the string of 3JM-Symbols
-    canonicalization(threejms,indices,deltas)
+    canonicalize(threejms, indices, deltas)
 
     # Create the Yutsis Graph
-    Ymain = YutsisGraph(threejms,deltas,zeroIdx)
+    Ymain = YutsisGraph(threejms, deltas, zeroIdx)
 
     # Get single internal line separated graphs
-    Ymain.getSeparatedGraph()
+    Ymain.separate_graph()
 
     # Get disconnected graphs
-    Ylist = Ymain.getDisconnectedGraphs()
+    Ylist = Ymain.get_disconnected_graphs()
 
     # Loop over disconnected Yutsis graph
     addIdxId = 0
@@ -289,8 +294,8 @@ def YutsisReduction(indices,clebsches,zeroIdx):
 
         # Main graph reduction loop
         iterNum = 0
-        iterMax = 100
-        while Y.getNumberOfNodes() > 2 and iterNum < iterMax:
+
+        while Y.get_number_of_nodes() > 2 and iterNum < max_iter:
             iterNum += 1
             onecycleEdges = []
             bubbleEdges = []
@@ -306,25 +311,25 @@ def YutsisReduction(indices,clebsches,zeroIdx):
                 Y.triangleReduction(triangleEdges[0])
             elif Y.squareSearch(squareEdges) != []:
                 addIdxId += 1
-                Y.squareReduction(squareEdges[0],addIdxId)
+                Y.squareReduction(squareEdges[0], addIdxId)
             else:
                 print("Error: Bigger than square not implemented yet")
                 break
 
         # Maximum number of iteration achieved
-        if iterNum == iterMax:
+        if iterNum == max_iter:
             print("Error: Maximum number of iteration achieved")
 
         # Get the final 3J-symbol
-        if Y.getNumberOfNodes() == 2:
+        if Y.get_number_of_nodes() == 2:
             Y.finalThreeJSymbol()
 
         # Yutsis graph not fully reduced
-        if Y.getNumberOfNodes() != 0:
+        if Y.get_number_of_nodes() != 0:
             print("Error: Yutsis graph not fully reduced")
 
         # Remove 3j-Symbols that are already part of a 6j-Symbol
-        Y.removeRedondantThreeJ()
+        Y.remove_redundant_threej()
 
     # Merge Yutsis graphs
     for Y in Ylist[1:]:

@@ -1,3 +1,4 @@
+from __future__ import (division, absolute_import, print_function)
 
 from .Delta import *
 from .ThreeJ import *
@@ -8,23 +9,24 @@ from .Idx import *
 from .YutsisNode import *
 from .YutsisEdge import *
 
+
 class YutsisGraph:
     """Yutsis graph class"""
 
-    def __init__(self,threejms,deltas,_zeroIdx):
+    def __init__(self, threejms, deltas, _zeroIdx):
         """Constructor method"""
 
         # n number of the Yutsis graph
-        self.n = len(threejms)//2
+        self.n = len(threejms) // 2
 
         # Sign
         self.sign = +1
 
         # Create list of nodes
-        self.nodes = [YutsisNode() for _ in range(2*self.n)]
+        self.nodes = [YutsisNode() for _ in range(2 * self.n)]
 
         # Create list of edges
-        self.edges = [YutsisEdge() for _ in range(3*self.n)]
+        self.edges = [YutsisEdge() for _ in range(3 * self.n)]
 
         # Create list of deltas
         self.deltas = []
@@ -49,13 +51,13 @@ class YutsisGraph:
         self.zeroIdx = _zeroIdx
 
         # Specify nodes and edges
-        for k,threejm in enumerate(threejms):
+        for k, threejm in enumerate(threejms):
 
-            for l,idx in enumerate(threejm.indices):
+            for l, idx in enumerate(threejm.indices):
 
                 # Look for index of the corresponding edge
                 kedge = -1
-                for m,edge in enumerate(self.edges):
+                for m, edge in enumerate(self.edges):
                     if edge.idx == idx or edge.idx == None:
                         kedge = m
                         break
@@ -64,9 +66,9 @@ class YutsisGraph:
                 self.edges[kedge].idx = idx
 
                 # Add the corresponding node to edge
-                if threejm.getSign(l) == 1:
+                if threejm.get_sign(l) == 1:
                     self.edges[kedge].setOutgoing(self.nodes[k])
-                elif threejm.getSign(l) == -1:
+                elif threejm.get_sign(l) == -1:
                     self.edges[kedge].setIncoming(self.nodes[k])
                 else:
                     print("Error: 3JM-Symbol sign is neither 1 or -1")
@@ -74,7 +76,7 @@ class YutsisGraph:
                 # Add the corresponding edge to node
                 self.nodes[k].edges[l] = self.edges[kedge]
 
-    def getDisconnectedGraphs(self):
+    def get_disconnected_graphs(self):
         """Return a list of disconnected graphs"""
 
         # Yutsis graph list
@@ -87,7 +89,7 @@ class YutsisGraph:
         # Look for disconnected parts
         ygLength = self.n + 1
         while ygLength > self.n:
-            ygLenght = self.n
+            ygLength = self.n
             nodes = [self.nodes[0]]
             edges = []
             for node in nodes:
@@ -104,8 +106,8 @@ class YutsisGraph:
                 return yutsisGraphs
             else:
                 # Create disconnected Yutsis graph
-                YG = YutsisGraph([],[],self.zeroIdx)
-                YG.n = len(nodes)//2
+                YG = YutsisGraph([], [], self.zeroIdx)
+                YG.n = len(nodes) // 2
                 YG.nodes = nodes
                 YG.edges = edges
                 yutsisGraphs.append(YG)
@@ -118,7 +120,7 @@ class YutsisGraph:
 
         print("Error: Return should occur inside the loop")
 
-    def getSeparatedGraph(self):
+    def separate_graph(self):
         """Return single internal line separated graph"""
 
         # Look for single internal lines
@@ -142,7 +144,7 @@ class YutsisGraph:
                     self.singleInternalLineSeparation(internalLine)
                     break
 
-    def singleInternalLineSeparation(self,edgeInt):
+    def singleInternalLineSeparation(self, edgeInt):
         """Separate graphs linked by a single internal line"""
 
         # Get internal nodes
@@ -172,9 +174,9 @@ class YutsisGraph:
             edgeExt2[1].changeDirection()
 
         # Set the appropriate node signs
-        if edgeExt1[0] == nodeInt1.firstOfTwo(edgeExt1[0],edgeExt1[1]):
+        if edgeExt1[0] == nodeInt1.firstOfTwo(edgeExt1[0], edgeExt1[1]):
             nodeInt1.changeSign('direct')
-        if edgeExt2[0] == nodeInt2.firstOfTwo(edgeExt2[0],edgeExt2[1]):
+        if edgeExt2[0] == nodeInt2.firstOfTwo(edgeExt2[0], edgeExt2[1]):
             nodeInt2.changeSign('direct')
 
         # Add J hat factor
@@ -182,19 +184,19 @@ class YutsisGraph:
         edgeExt2[0].idx.jhat -= 1
 
         # Create deltas
-        self.deltas.append(Delta(edgeExt1[0].idx,edgeExt1[1].idx))
-        self.deltas.append(Delta(edgeExt2[0].idx,edgeExt2[1].idx))
-        self.deltas.append(Delta(self.zeroIdx,edgeInt.idx))
+        self.deltas.append(Delta(edgeExt1[0].idx, edgeExt1[1].idx))
+        self.deltas.append(Delta(edgeExt2[0].idx, edgeExt2[1].idx))
+        self.deltas.append(Delta(self.zeroIdx, edgeInt.idx))
 
         # Remove the single internal line
         self.n -= 1
         self.edges.remove(edgeInt)
         self.nodes.remove(nodeInt1)
         self.nodes.remove(nodeInt2)
-        self.mergeEdges(edgeExt1[1],edgeExt1[0])
-        self.mergeEdges(edgeExt2[1],edgeExt2[0])
+        self.mergeEdges(edgeExt1[1], edgeExt1[0])
+        self.mergeEdges(edgeExt2[1], edgeExt2[0])
 
-    def merge(self,Y):
+    def merge(self, Y):
         """Merge Y into self"""
 
         # Check
@@ -209,12 +211,12 @@ class YutsisGraph:
         self.ninejs.extend(Y.ninejs)
         self.additionalIndices.extend(Y.additionalIndices)
 
-    def getNumberOfNodes(self):
+    def get_number_of_nodes(self):
         """Get the number of nodes"""
 
         return len(self.nodes)
 
-    def mergeEdges(self,outgoingEdge,incomingEdge):
+    def mergeEdges(self, outgoingEdge, incomingEdge):
         """Merge the two exterior edges of a bubble"""
 
         # Change the outgoing node of outgoingEdge for the one of incomingEdge
@@ -227,7 +229,7 @@ class YutsisGraph:
         # Remove incomingEdge
         self.edges.remove(incomingEdge)
 
-    def onecycleSearch(self,onecycleEdges):
+    def onecycleSearch(self, onecycleEdges):
         """Search for a 1-cycle in the graph"""
 
         # Search for a 1-cycle in the graph
@@ -243,15 +245,15 @@ class YutsisGraph:
         # Return onecycleEdges
         return onecycleEdges
 
-    def bubbleSearch(self,bubbleEdges):
+    def bubbleSearch(self, bubbleEdges):
         """Search for a bubble in the graph"""
 
         # Search for a bubble in the graph
-        for ka,nodeA in enumerate(self.nodes):
-            for nodeB in self.nodes[ka+1:]:
+        for ka, nodeA in enumerate(self.nodes):
+            for nodeB in self.nodes[ka + 1:]:
                 commonListAB = [edge for edge in nodeA.edges if edge in nodeB.edges]
                 if len(commonListAB) == 2:
-                    bubbleEdges.append((commonListAB[0],commonListAB[1]))
+                    bubbleEdges.append((commonListAB[0], commonListAB[1]))
                     break
             if bubbleEdges != []:
                 break
@@ -259,19 +261,19 @@ class YutsisGraph:
         # Return bubbleEdges
         return bubbleEdges
 
-    def triangleSearch(self,triangleEdges):
+    def triangleSearch(self, triangleEdges):
         """Search for a triangle in the graph"""
 
         # Search for a triangle in the graph
-        for ka,nodeA in enumerate(self.nodes):
-            for kb,nodeB in enumerate(self.nodes[ka+1:]):
+        for ka, nodeA in enumerate(self.nodes):
+            for kb, nodeB in enumerate(self.nodes[ka + 1:]):
                 commonListAB = [edge for edge in nodeA.edges if edge in nodeB.edges]
                 if len(commonListAB) == 1:
-                    for nodeC in self.nodes[ka+kb+2:]:
+                    for nodeC in self.nodes[ka + kb + 2:]:
                         commonListBC = [edge for edge in nodeB.edges if edge in nodeC.edges]
                         commonListCA = [edge for edge in nodeC.edges if edge in nodeA.edges]
                         if len(commonListBC) == 1 and len(commonListCA) == 1:
-                            triangleEdges.append((commonListAB[0],commonListBC[0],commonListCA[0]))
+                            triangleEdges.append((commonListAB[0], commonListBC[0], commonListCA[0]))
                             break
                 if triangleEdges != []:
                     break
@@ -281,36 +283,36 @@ class YutsisGraph:
         # Return triangleEdges
         return triangleEdges
 
-    def squareSearch(self,squareEdges):
+    def squareSearch(self, squareEdges):
         """Search for a square in the graph"""
 
         # Search for a square in the graph
-        for ka,nodeA in enumerate(self.nodes):
-            for kb,nodeB in enumerate(self.nodes[ka+1:]):
+        for ka, nodeA in enumerate(self.nodes):
+            for kb, nodeB in enumerate(self.nodes[ka + 1:]):
                 commonListAB = [edge for edge in nodeA.edges if edge in nodeB.edges]
                 if len(commonListAB) == 1:
-                    for kc,nodeC in enumerate(self.nodes[ka+1:]):
+                    for kc, nodeC in enumerate(self.nodes[ka + 1:]):
                         if nodeC == nodeB:
                             continue
                         commonListAC = [edge for edge in nodeA.edges if edge in nodeC.edges]
                         commonListBC = [edge for edge in nodeB.edges if edge in nodeC.edges]
                         if len(commonListAC) == 1 and len(commonListBC) == 0:
-                            for nodeD in self.nodes[ka+1:]:
+                            for nodeD in self.nodes[ka + 1:]:
                                 if nodeD == nodeB or nodeD == nodeC:
                                     continue
                                 commonListBD = [edge for edge in nodeB.edges if edge in nodeD.edges]
                                 commonListCD = [edge for edge in nodeC.edges if edge in nodeD.edges]
                                 if len(commonListBD) == 1 and len(commonListCD) == 1:
-                                    squareEdges.append((commonListAB[0],commonListBD[0],commonListCD[0],commonListAC[0]))
+                                    squareEdges.append((commonListAB[0], commonListBD[0], commonListCD[0], commonListAC[0]))
                                     break
                         if len(commonListAC) == 0 and len(commonListBC) == 1:
-                            for nodeD in self.nodes[ka+1:]:
+                            for nodeD in self.nodes[ka + 1:]:
                                 if nodeD == nodeB or nodeD == nodeC:
                                     continue
                                 commonListCD = [edge for edge in nodeC.edges if edge in nodeD.edges]
                                 commonListDA = [edge for edge in nodeD.edges if edge in nodeA.edges]
                                 if len(commonListCD) == 1 and len(commonListDA) == 1:
-                                    squareEdges.append((commonListAB[0],commonListBC[0],commonListCD[0],commonListDA[0]))
+                                    squareEdges.append((commonListAB[0], commonListBC[0], commonListCD[0], commonListDA[0]))
                                     break
                         if squareEdges != []:
                             break
@@ -322,7 +324,7 @@ class YutsisGraph:
         # Return squareEdges
         return squareEdges
 
-    def bubbleReduction(self,bubbleEdges):
+    def bubbleReduction(self, bubbleEdges):
         """Remove a bubble from the graph"""
 
         # Get the internal edges of the bubble
@@ -357,7 +359,7 @@ class YutsisGraph:
             edgeExt2.changeDirection()
 
         # Set the appropriate node signs
-        if node1.firstOfTwo(edgeA,edgeB) == node2.firstOfTwo(edgeA,edgeB):
+        if node1.firstOfTwo(edgeA, edgeB) == node2.firstOfTwo(edgeA, edgeB):
             node2.changeSign('indirect')
         if node1.sign == node2.sign:
             node2.changeSign('direct')
@@ -377,22 +379,22 @@ class YutsisGraph:
         self.edges.remove(edgeB)
 
         # Create the delta
-        self.deltas.append(Delta(edgeExt1.idx,edgeExt2.idx))
+        self.deltas.append(Delta(edgeExt1.idx, edgeExt2.idx))
 
         # Set edgeExt1 index to the surviving one
         edgeExt1.idx = self.deltas[-1].indices[0]
 
         # Create the 3j-Symbol
-        self.threejs.append(ThreeJ(edgeExt1.idx,idxA,idxB))
+        self.threejs.append(ThreeJ(edgeExt1.idx, idxA, idxB))
 
         # Merge external edges (or remove them if lead to one-cycle)
         if edgeExt1.getIncoming() == edgeExt2.getOutgoing():
             self.edges.remove(edgeExt1)
             self.edges.remove(edgeExt2)
         else:
-            self.mergeEdges(edgeExt1,edgeExt2)
+            self.mergeEdges(edgeExt1, edgeExt2)
 
-    def triangleReduction(self,triangleEdges):
+    def triangleReduction(self, triangleEdges):
         """Remove a triangle from the graph"""
 
         # Get the internal edges of the triangle
@@ -453,11 +455,11 @@ class YutsisGraph:
             edgeExtCA.changeDirection()
 
         # Set the appropriate node signs
-        if nodeAB.firstOfTwo(edgeA,edgeB) != edgeA:
+        if nodeAB.firstOfTwo(edgeA, edgeB) != edgeA:
             nodeAB.changeSign('indirect')
-        if nodeBC.firstOfTwo(edgeB,edgeC) != edgeB:
+        if nodeBC.firstOfTwo(edgeB, edgeC) != edgeB:
             nodeBC.changeSign('indirect')
-        if nodeCA.firstOfTwo(edgeC,edgeA) != edgeC:
+        if nodeCA.firstOfTwo(edgeC, edgeA) != edgeC:
             nodeCA.changeSign('indirect')
         if nodeAB.sign != -1:
             nodeAB.changeSign('direct')
@@ -469,7 +471,7 @@ class YutsisGraph:
         # Create the 6j-Symbol
         # (1 2 3) -> (BC CA AB)
         # (4 5 6) -> (A  B  C )
-        self.sixjs.append(SixJ(edgeExtBC.idx,edgeExtCA.idx,edgeExtAB.idx,edgeA.idx,edgeB.idx,edgeC.idx))
+        self.sixjs.append(SixJ(edgeExtBC.idx, edgeExtCA.idx, edgeExtAB.idx, edgeA.idx, edgeB.idx, edgeC.idx))
 
         # Remove the triangle from the graph
         self.n -= 1
@@ -485,7 +487,7 @@ class YutsisGraph:
         self.edges.remove(edgeB)
         self.edges.remove(edgeC)
 
-    def squareReduction(self,squareEdges,addIdxId):
+    def squareReduction(self, squareEdges, addIdxId):
         """Remove a square from the graph"""
 
         # Get the internal edges of the square
@@ -562,13 +564,13 @@ class YutsisGraph:
             edgeExtDA.changeDirection()
 
         # Set the appropriate node signs
-        if nodeAB.firstOfTwo(edgeA,edgeB) != edgeA:
+        if nodeAB.firstOfTwo(edgeA, edgeB) != edgeA:
             nodeAB.changeSign('indirect')
-        if nodeBC.firstOfTwo(edgeB,edgeC) != edgeB:
+        if nodeBC.firstOfTwo(edgeB, edgeC) != edgeB:
             nodeBC.changeSign('indirect')
-        if nodeCD.firstOfTwo(edgeC,edgeD) != edgeC:
+        if nodeCD.firstOfTwo(edgeC, edgeD) != edgeC:
             nodeCD.changeSign('indirect')
-        if nodeDA.firstOfTwo(edgeD,edgeA) != edgeD:
+        if nodeDA.firstOfTwo(edgeD, edgeA) != edgeD:
             nodeDA.changeSign('indirect')
         if nodeAB.sign != -1:
             nodeAB.changeSign('direct')
@@ -584,7 +586,7 @@ class YutsisGraph:
         numbHalfInt += 1 if edgeB.idx.type == 'hint' else 0
         numbHalfInt += 1 if edgeD.idx.type == 'hint' else 0
         addIdxType = 'int' if numbHalfInt % 2 == 0 else 'hint'
-        addIdx = Idx(addIdxType,None,'K_{%s}'%(addIdxId),'shouldNeverAppear')
+        addIdx = Idx(addIdxType, is_particle=False)
         self.additionalIndices.append(addIdx)
 
         # Create the edge associated the additional index and add it to self.edges
@@ -602,12 +604,12 @@ class YutsisGraph:
         # Create the first 6j-Symbol
         # (1 2 3) -> (AB DA add)
         # (4 5 6) -> (D  B  A  )
-        self.sixjs.append(SixJ(edgeExtAB.idx,edgeExtDA.idx,addIdx,edgeD.idx,edgeB.idx,edgeA.idx))
+        self.sixjs.append(SixJ(edgeExtAB.idx, edgeExtDA.idx, addIdx, edgeD.idx, edgeB.idx, edgeA.idx))
 
         # Create the second 6j-Symbol
         # (1 2 3) -> (BC CD add)
         # (4 5 6) -> (D  B  C  )
-        self.sixjs.append(SixJ(edgeExtBC.idx,edgeExtCD.idx,addIdx,edgeD.idx,edgeB.idx,edgeC.idx))
+        self.sixjs.append(SixJ(edgeExtBC.idx, edgeExtCD.idx, addIdx, edgeD.idx, edgeB.idx, edgeC.idx))
 
         # Remove the square from the graph
         self.n -= 1
@@ -633,27 +635,27 @@ class YutsisGraph:
     def finalThreeJSymbol(self):
         """Create the final 3J-symbol"""
 
-        if self.getNumberOfNodes() > 2:
+        if self.get_number_of_nodes() > 2:
             print("Error: The reduction has not been fully accomplished")
         else:
             # Set the appropriate edge orientations
-            for k,edge in enumerate(self.edges):
+            for k, edge in enumerate(self.edges):
                 if edge.getIncoming() != self.nodes[0]:
                     if edge.getOutgoing() != self.nodes[0]:
-                        print("Error: edge %i is neither incoming nor outgoing node0"%(k))
+                        print("Error: edge %i is neither incoming nor outgoing node0" % (k))
                         exit(-1)
                     edge.changeDirection()
 
             # Set the appropriate node signs
             for node in self.nodes:
                 node.placeFirst(self.edges[0])
-            if self.nodes[0].firstOfTwo(self.edges[1],self.edges[2]) == self.nodes[1].firstOfTwo(self.edges[1],self.edges[2]):
+            if self.nodes[0].firstOfTwo(self.edges[1], self.edges[2]) == self.nodes[1].firstOfTwo(self.edges[1], self.edges[2]):
                 self.nodes[1].changeSign('indirect')
             if self.nodes[0].sign == self.nodes[1].sign:
                 self.nodes[1].changeSign('direct')
 
             # Create the 3j-Symbol
-            self.threejs.append(ThreeJ(self.edges[0].idx,self.edges[1].idx,self.edges[2].idx))
+            self.threejs.append(ThreeJ(self.edges[0].idx, self.edges[1].idx, self.edges[2].idx))
 
             # Remove the last 3j-Symbol from the graph
             self.n -= 1
@@ -663,12 +665,12 @@ class YutsisGraph:
             self.edges.remove(self.edges[1])
             self.edges.remove(self.edges[0])
 
-    def removeRedondantThreeJ(self):
+    def remove_redundant_threej(self):
         """Remove 3j-Symbols that are already part of a 6j-Symbol"""
 
         for sixj in self.sixjs:
             for threej in self.threejs:
-                if sixj.containsThreeJ(threej):
+                if sixj.contains_threej(threej):
                     self.threejs.remove(threej)
 
     def printResults(self):
@@ -689,14 +691,14 @@ class YutsisGraph:
         for sixj in self.sixjs:
             print(sixj)
 
-    def factorize_ninejs(self):
+    def collect_ninejs(self):
         """Factorize 9j-symbols from a given list of 6j-symbols"""
 
-        # Loop in reverse order because additionalIndex can be removed from the list in the process
-        for k,addIndex in enumerate(self.additionalIndices[::-1]):
-            self.factorize_ninej(addIndex)
+        # Loop over copy because list may be modified during iteration.
+        for addIndex in self.additionalIndices[:]:
+            self.collect_ninej(addIndex)
 
-    def factorize_ninej(self,additionalIndex):
+    def collect_ninej(self, additionalIndex):
         """Factorize 9j-symbols from a given list of 6j-symbols and an additional index"""
 
         # { idx1 idx2 idx3 }
@@ -722,14 +724,14 @@ class YutsisGraph:
             return
 
         # Put the additional index at a particular position
-        for ksixj,sixj in enumerate(sixjs):
+        for ksixj, sixj in enumerate(sixjs):
             position = sixj.indices.index(additionalIndex)
-            col  = position%3
-            line = position//3
+            col = position % 3
+            line = position // 3
             if line != 1:
-                sixj.permute_lines_for_columns(col,(col+1)%3)
-            if col != 2-ksixj:
-                sixj.permute_columns(col,2-ksixj)
+                sixj.permute_lines_for_columns(col, (col + 1) % 3)
+            if col != 2 - ksixj:
+                sixj.permute_columns(col, 2 - ksixj)
 
         # Put other indices in canonical position
         sixj1 = sixjs[0]
@@ -747,7 +749,7 @@ class YutsisGraph:
         except ValueError:
             pass
         else:
-            sixj1.permute_lines_for_columns(0,1)
+            sixj1.permute_lines_for_columns(0, 1)
 
         # Second sixj preparation
         # j8
@@ -757,12 +759,12 @@ class YutsisGraph:
         except ValueError:
             print("Error: The index should appear in the two 6j-symbols (in Ninej factorization)")
         else:
-            col  = position%3
-            line = position//3
+            col = position % 3
+            line = position // 3
             if line == 1:
-                sixj2.permute_lines_for_columns(0,2)
+                sixj2.permute_lines_for_columns(0, 2)
             if col == 0:
-                sixj2.permute_columns(0,2)
+                sixj2.permute_columns(0, 2)
 
         # j4
         idx4 = sixj1.indices[1]
@@ -782,12 +784,12 @@ class YutsisGraph:
         except ValueError:
             print("Error: The index should appear in the two 6j-symbols (in Ninej factorization)")
         else:
-            col  = position%3
-            line = position//3
+            col = position % 3
+            line = position // 3
             if line == 0:
-                sixj3.permute_lines_for_columns(1,2)
+                sixj3.permute_lines_for_columns(1, 2)
             if col == 2:
-                sixj3.permute_columns(1,2)
+                sixj3.permute_columns(1, 2)
 
         # j9
         idx9 = sixj1.indices[4]
@@ -834,16 +836,16 @@ class YutsisGraph:
         self.sixjs.remove(sixj3)
 
         # Create 9j-symbol
-        self.ninejs.append(NineJ(idx1,idx2,idx3,idx4,idx5,idx6,idx7,idx8,idx9))
+        self.ninejs.append(NineJ(idx1, idx2, idx3, idx4, idx5, idx6, idx7, idx8, idx9))
 
-    def factorize_twelvejfirsts(self):
+    def collect_twelvejfirsts(self):
         """Factorize 12j(I)-symbols from a given list of 6j-symbols and 9j-symbols"""
 
-        # Loop in reverse order because additionalIndex can be removed from the list in the process
-        for k,addIndex in enumerate(self.additionalIndices[::-1]):
-            self.factorize_twelvejfirst(addIndex)
+        # Loop over copy because list may be modified during iteration.
+        for addIndex in self.additionalIndices[:]:
+            self.collect_twelvejfirst(addIndex)
 
-    def factorize_twelvejfirst(self,additionalIndex):
+    def collect_twelvejfirst(self, additionalIndex):
         """Factorize 12j(I)-symbols from a given list of 6j-symbols and 9j-symbols and an additional index"""
 
         #                    {j1  j2   j3   j4   }
@@ -880,22 +882,22 @@ class YutsisGraph:
             return
 
         # Put the additional index at a particular position
-        ninej.place_index_in_position(additionalIndex,2)
-        for ksixj,sixj in enumerate(sixjs):
+        ninej.place_index_in_position(additionalIndex, 2)
+        for sixj in sixjs:
             position = sixj.indices.index(additionalIndex)
-            col  = position%3
-            line = position//3
+            col = position % 3
+            line = position // 3
             if line != 0:
-                sixj.permute_lines_for_columns(col,(col+1)%3)
+                sixj.permute_lines_for_columns(col, (col + 1) % 3)
             if col != 2:
-                sixj.permute_columns(col,2)
+                sixj.permute_columns(col, 2)
 
         # Put other indices in canonical position
         sixj1 = sixjs[0]
         sixj2 = sixjs[1]
 
         # Already placed indices (j2,j10)
-        idx2  = sixj1.indices[5]
+        idx2 = sixj1.indices[5]
         idx10 = sixj2.indices[5]
         if idx2 in sixj2.indices or idx2 in ninej.indices:
             print("Error: 12j(I) factorization impossible")
@@ -904,11 +906,11 @@ class YutsisGraph:
 
         # Prepare first sixj and two indices of the ninej
         if sixj1.indices[0] not in ninej.indices:
-            sixj1.permute_lines_for_columns(0,1)
+            sixj1.permute_lines_for_columns(0, 1)
         if sixj1.indices[0] not in ninej.indices[:2]:
             ninej.reflection_second_diagonal()
         if sixj1.indices[0] != ninej.indices[1]:
-            ninej.permute_columns(0,1)
+            ninej.permute_columns(0, 1)
         if sixj1.indices[0] != ninej.indices[1] or sixj1.indices[1] != ninej.indices[0]:
             print("Error: 12j(I) factorization impossible")
         idx3 = sixj1.indices[0]
@@ -923,21 +925,21 @@ class YutsisGraph:
 
         # Prepare second sixj and two indices of the ninej
         if sixj2.indices[0] not in ninej.indices:
-            sixj2.permute_lines_for_columns(0,1)
+            sixj2.permute_lines_for_columns(0, 1)
         if sixj2.indices[4] != sixj1.indices[3]:
-            sixj2.permute_columns(0,1)
+            sixj2.permute_columns(0, 1)
         if sixj2.indices[0] != ninej.indices[5] or sixj2.indices[1] != ninej.indices[8]:
             print("Error: 12j(I) factorization impossible")
-        idx9  = sixj2.indices[0]
+        idx9 = sixj2.indices[0]
         idx11 = sixj2.indices[1]
         if sixj2.indices[4] != idx5 or sixj2.indices[3] != idx6:
             print("Error: 12j(I) factorization impossible")
 
         # Indices from 9j-coefficient
-        idx8  = ninej.indices[3]
-        idx4  = ninej.indices[4]
+        idx8 = ninej.indices[3]
+        idx4 = ninej.indices[4]
         idx12 = ninej.indices[6]
-        idx7  = ninej.indices[7]
+        idx7 = ninej.indices[7]
         if idx8 in sixj1.indices or idx8 in sixj2.indices:
             print("Error: 12j(I) factorization impossible")
         if idx4 in sixj1.indices or idx8 in sixj2.indices:
@@ -948,9 +950,9 @@ class YutsisGraph:
             print("Error: 12j(I) factorization impossible")
 
         # Add a phase factor
-        idx1.jphase  += 1
-        idx3.jphase  += 1
-        idx9.jphase  -= 1
+        idx1.jphase += 1
+        idx3.jphase += 1
+        idx9.jphase -= 1
         idx11.jphase -= 1
 
         # Remove additional index
@@ -966,5 +968,5 @@ class YutsisGraph:
         self.sixjs.remove(sixj2)
 
         # Create 12j(I)-symbol
-        self.twelvejfirsts.append(TwelveJFirst(idx1,idx2,idx3,idx4,idx5,idx6,idx7,idx8,idx9,idx10,idx11,idx12))
+        self.twelvejfirsts.append(TwelveJFirst(idx1, idx2, idx3, idx4, idx5, idx6, idx7, idx8, idx9, idx10, idx11, idx12))
 

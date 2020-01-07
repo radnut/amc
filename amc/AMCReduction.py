@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
+from __future__ import (division, absolute_import, print_function)
 
 from copy import copy
-from sympy import Rational
+from fractions import Fraction
 from sys import stdout
 from amc.AMCFunctions import deltaReduction,partition,applyPermutation,smartPermutations
 from amc.AMCLatexFile import AMCLatexFile
@@ -122,7 +122,7 @@ def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermuta
                     partindices.append(clbIdx)
 
                 # Get prefactor and amplitudes
-                prefactor = Rational(term[0],term[1])
+                prefactor = Fraction(term[0],term[1])
                 newAmplitudes = []
                 for amp in amplitudes:
 
@@ -232,14 +232,14 @@ def AMCReduction(equations, outputFileName, doPermutations=False, doSmartPermuta
                 Y = YutsisReduction(indices,clebsches,zeroIdx)
 
                 # If not fully reduced (higher than square not implemented) then continue
-                if Y.getNumberOfNodes() != 0:
+                if Y.get_number_of_nodes() != 0:
                     print("Error: Yutsis graph not fully reduced so continue")
                     continue
 
                 # /!\ ninej (optimization does not account for ninej)
                 # /!\ should be done before the addition of additional indices to indices list
                 if factorize_ninej:
-                    Y.factorize_ninejs()
+                    Y.collect_ninejs()
                 #if factorize_twelvej:
                 #    Y.factorize_twelvejfirsts()
 

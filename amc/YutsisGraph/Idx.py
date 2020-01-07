@@ -1,41 +1,39 @@
+from __future__ import (division, absolute_import, print_function)
+
 
 class Idx:
     """Angular-momentum index class"""
 
-    def __init__(self,_type='hint',_tex=None,_jtex=None,_mtex=None,_zero=False,_external=False):
+    default_name_index = {'hint': 0, 'int': 0}
+
+    def __init__(self, type, name=None, *, is_particle, zero=False, external=False):
         """Constructor method"""
 
-        # Properties
-        self.type = _type
-        self.zero = _zero
-        self.external = _external
+        if type not in ('int', 'hint'):
+            raise ValueError("Index type must be 'int' or 'hint'")
 
-        # LaTeX output
-        self.tex = _tex
-        if self.tex != None:
-            self.jtex = 'j_{%s}'%(self.tex)
-            self.mtex = 'm_{%s}'%(self.tex)
-        elif _jtex != None and _mtex != None:
-            self.jtex = _jtex
-            self.mtex = _mtex
-        else:
-            print("Error: Index creation LaTeX issue")
+        # Properties
+        self.type = type
+        self.zero = zero
+        self.external = external
+
+        self.name = name or Idx.make_name(type)
 
         # Sign, phase and jhat factors
-        self.setDefault()
+        self.set_default()
 
         # Tex != None for particle indices
-        self.partIdx = _tex is not None
+        self.is_particle = is_particle
 
         # To treat deltas in equations
-        self.hasbeendelta = None
+        self.constrained_to = None
 
     def simplify(self):
         """Simplify the phases"""
 
         # Zero
         if self.zero:
-            self.setDefault()
+            self.set_default()
 
         # Integer case
         if self.type == 'int':
@@ -53,7 +51,7 @@ class Idx:
                 self.mphase -= 2
                 self.sign *= -1
 
-    def setDefault(self):
+    def set_default(self):
         """Set default values"""
 
         self.jphase = 0
@@ -61,8 +59,28 @@ class Idx:
         self.sign = 1
         self.jhat = 0
 
+    def save_state(self):
+        return (self.jphase, self.mphase, self.sign, self.jhat, self.constrained_to)
+
+    def load_state(self, state):
+        self.jphase, self.mphase, self.sign, self.jhat, self.constrained_to = state
+
     def __str__(self):
         """String"""
 
-        stringTemplate = "%10s  %10s  sign=%2i  phase=(-1)^{%2ij + %2im}  jhat=%2i  type=%4s  zero=%5r  external=%5r"
-        return stringTemplate%(self.jtex, self.mtex, self.sign, self.jphase, self.mphase, self.jhat, self.type, self.zero, self.external)
+        stringTemplate = "index %s sign=%2i  phase=(-1)^{%2ij + %2im}  jhat=%2i  type=%4s  zero=%5r  external=%5r"
+        return stringTemplate % (self.name, self.sign, self.jphase, self.mphase, self.jhat, self.type, self.zero, self.external)
+
+    @staticmethod
+    def coupled_type(idx1, idx2):
+        if (idx1.type == 'hint' and idx2.type == 'hint') or (idx1.type == 'int' and idx2.type == 'int'):
+            return 'int'
+        else:
+            return 'hint'
+
+    @classmethod
+    def make_name(cls, type):
+        idx = cls.default_name_index[type]
+        cls.default_name_index[type] += 1
+
+        return ('j{}' if type == 'hint' else 'J{}').format(idx)

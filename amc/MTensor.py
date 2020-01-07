@@ -1,3 +1,4 @@
+from __future__ import (division, absolute_import, print_function)
 
 class MTensor:
     """MTensor class"""
@@ -8,7 +9,7 @@ class MTensor:
         # Amplitude indices
         self.indices = _indices
         for idx in self.indices:
-            if not idx.partIdx:
+            if not idx.is_particle:
                 print("Error: MScheme amplitude contains non-particle indices")
 
         # Amplitude I,J
