@@ -7,11 +7,22 @@ declare E3 {
     mode=0,
     latex="E^{(3)}_{0}",
 }
+declare E3ph {
+    mode=0,
+    latex="E^{(3)}_{ph}",
+}
 
 # Hamiltonian
 declare H {
     mode=4,
     latex="H",
+}
+
+# cross-coupled Hamiltonian
+declare Hxc {
+    mode=4,
+    latex="{\tilde H}",
+    scheme=((1,-4),(3,-2)), # first coupled to last, third to second.
 }
 
 # 2nd order
@@ -22,3 +33,4 @@ E3 = 1/8 * sum_abcdij(H_ijab * H_abcd * H_cdij)
    + 1/8 * sum_abijkl(H_ijab * H_klij * H_abkl)
    - sum_abcijk(H_ijab * H_kbic * H_ackj);
 
+E3ph = - sum_abcijk(Hxc_ijab * Hxc_kbic * Hxc_ackj);
