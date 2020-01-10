@@ -170,7 +170,7 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *, permute=None,
     # introduced by the reduction procedure.
     yutsis_auxiliary_indices_to_ast(aux_idx, subscript_map, index_number, zero_ast)
 
-    idx = {astidx: i for i, astidx in subscript_map.items()}
+    idx = {astidx: i for i, astidx in subscript_map.items() if i.constrained_to is None}
 
     reduced_variables = tuple(
         ast.ReducedVariable(v.tensor, v.subscripts,
@@ -316,19 +316,11 @@ def handle_deltas(Y):
         while survivingIdx.constrained_to is not None:
             survivingIdx = survivingIdx.constrained_to
 
-        # Apply delta to indices
-        # 1) The ones not containing survivingIdx
-        # 2) The ones containing survivingIdx
-        for dlt in [delta for delta in deltaList if survivingIdx not in delta.indices]:
-            dlt.apply()
-        for dlt in [delta for delta in deltaList if survivingIdx in delta.indices]:
-            dlt.apply()
-
         # Get list of all other indices
         for dlt in deltaList:
             for idx in dlt.indices:
                 if idx != survivingIdx and idx not in idxmap:
-                    idx.constrained_to = survivingIdx
+                    idx.set_constraint(survivingIdx)
                     idxmap[idx] = survivingIdx
 
         # Remove deltas from Yutsis

@@ -51,6 +51,19 @@ class Idx:
                 self.mphase -= 2
                 self.sign *= -1
 
+    def set_constraint(self, other):
+        if self.type != other.type:
+            raise ValueError('indices must have same type')
+
+        self.constrained_to = other
+
+        other.sign *= self.sign
+        other.jphase += self.jphase
+        other.mphase += self.mphase
+        other.jhat += self.jhat
+
+        self.set_default()
+
     def set_default(self):
         """Set default values"""
 
@@ -58,12 +71,6 @@ class Idx:
         self.mphase = 0
         self.sign = 1
         self.jhat = 0
-
-    def save_state(self):
-        return (self.jphase, self.mphase, self.sign, self.jhat, self.constrained_to)
-
-    def load_state(self, state):
-        self.jphase, self.mphase, self.sign, self.jhat, self.constrained_to = state
 
     def __str__(self):
         """String"""
