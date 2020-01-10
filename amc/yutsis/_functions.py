@@ -1,8 +1,9 @@
 from __future__ import (division, absolute_import, print_function)
 
-from .YutsisGraph import YutsisGraph
-from .Delta import Delta
 from copy import copy
+
+from ._graph import YutsisGraph
+from ._delta import Delta
 
 
 def handle_zero_lines(threejms, indices, deltas):

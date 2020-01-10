@@ -1,13 +1,13 @@
 from __future__ import (division, absolute_import, print_function)
 
-from .Delta import *
-from .ThreeJ import *
-from .SixJ import *
-from .NineJ import *
-from .TwelveJFirst import *
-from .Idx import *
-from .YutsisNode import *
-from .YutsisEdge import *
+from ._delta import Delta
+from ._threej import ThreeJ
+from ._sixj import SixJ
+from ._ninej import NineJ
+from ._twelvej import TwelveJFirst
+from ._idx import Idx
+from ._node import YutsisNode
+from ._edge import YutsisEdge
 
 
 class YutsisGraph:

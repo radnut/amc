@@ -1,3 +1,3 @@
-from .ClebschGordan import ClebschGordan
-from .Functions import YutsisReduction
-from .Idx import Idx
+from ._cg import ClebschGordan
+from ._functions import YutsisReduction
+from ._idx import Idx

@@ -1,6 +1,6 @@
 from __future__ import (division, absolute_import, print_function)
 
-from .ThreeJMSymbol import ThreeJM
+from ._threejm import ThreeJM
 
 
 class ClebschGordan:
