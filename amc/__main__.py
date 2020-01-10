@@ -2,64 +2,84 @@
 
 from __future__ import (division, absolute_import, print_function)
 
+import argparse
 import os.path
-import pickle
 import datetime
-import amc.run
+
 import amc.frontend
-import amc.AMCReduction
 import amc.glue.reduction
+
+
+def parse_command_line():
+    """Return run commands from the Command Line Interface.
+
+    Returns:
+        (Namespace): Appropriate commands to manage the program's run.
+
+    """
+
+    parser = argparse.ArgumentParser(
+        description=
+        "ANGULAR MOMENTUM COUPLING v0.1\n\n"
+        "Perform angular-momentum coupling on the given equations"
+        "and return the result as a LaTeX file.")
+
+    parser.add_argument('source', help='input file')
+    parser.add_argument('-o', '--output', nargs=1, help='output file')
+#     parser.add_argument('-p', '--permute', choices=['yes', 'no', 'smart'], default='smart',
+#                       help="Permute tensor indices to find simpler formulas. `smart' tries only the ones that are probable to succeed.")
+    parser.add_argument('--collect-ninejs', action='store_true', help='Build 9j-coefficients from products of 6j-coefficients.')
+    parser.add_argument('--print-threejs', action='store_true', help='Print 3j-coefficients.')
+    parser.add_argument('--wet-convention', choices=['edmonds', 'sakurai'], default='edmonds',
+                        help='Convention used for Wigner-Eckart reduced matrix elements.')
+    parser.add_argument('--wet-scalar', action='store_true',
+                        help='Reduce scalar matrix elements. Default is to use the unreduced form for scalar tensors.')
+    parser.add_argument('-V', '--version', action='version', version='%(prog)s 0.1')
+    parser.add_argument('-v', '--verbose', action='count', help='Increase verbosity', default=0)
+
+    args = parser.parse_args()
+
+    return args
 
 
 def main():
     """Launch the AMC program."""
 
     print(
-        "% #############################\n"
-        "% # Angular Momentum Coupling #\n"
-        "% #           v0.1            #\n"
-        "% #                           #\n"
-        "% #      by AMC Dev Team      #\n"
-        "% #############################\n"
+        "#############################\n"
+        "# Angular Momentum Coupling #\n"
+        "#           v0.1            #\n"
+        "#                           #\n"
+        "#      by AMC Dev Team      #\n"
+        "#############################\n"
     )
 
     # Parse command line
-    run_arguments = amc.run.parse_command_line()
+    run_arguments = parse_command_line()
 
-    # Input file
-    if run_arguments.binary:
-        # Binary
-        with open(run_arguments.source, "rb") as fp:
-            equations = pickle.load(fp)
-    else:
-        # Text
-        parser = amc.frontend.Parser(optimize=True)
-        with open(run_arguments.source) as f:
-            parser.parse(f.read(), debug=0)
-        if run_arguments.verbose > 0:
-            print('# Known Tensors #')
-            for tensor in parser.tensors.values():
-                print(tensor)
+    # Text
+    parser = amc.frontend.Parser(optimize=True)
+    with open(run_arguments.source) as f:
+        parser.parse(f.read(), debug=0)
+    if run_arguments.verbose > 0:
+        print('# Known Tensors #')
+        for tensor in parser.tensors.values():
+            print(tensor)
+        print()
+        print('# Equations #')
+        for eqn in parser.equations:
+            print('Original')
+            print(eqn)
             print()
-            print('# Equations #')
-            for eqn in parser.equations:
-                print('Original')
-                print(eqn)
-                print()
-                eqn_permuted = eqn.expand_permutations()
-                print('Permuted')
-                print(eqn_permuted)
-                print()
-                eqn_expanded = eqn_permuted.expand()
-                print('Expanded')
-                print(eqn_expanded)
-                print()
-                print('Drudged')
-                print(eqn_expanded.to_drudge())
-                print()
-                print()
-        # equations = [ eqn.to_drudge() for eqn in parser.equations ]
-        equations = parser.equations
+            eqn_permuted = eqn.expand_permutations()
+            print('Permuted')
+            print(eqn_permuted)
+            print()
+            eqn_expanded = eqn_permuted.expand()
+            print('Expanded')
+            print(eqn_expanded)
+            print()
+    equations = parser.equations
 
     # Output file
     if run_arguments.output is None:
@@ -72,51 +92,30 @@ def main():
     else:
         output_file = run_arguments.output[0]
 
-    # Permutation option
-    if run_arguments.permute == 'smart':
-        permute = True
-        permute_smart = True
-    elif run_arguments.permute == 'yes':
-        permute = True
-        permute_smart = False
-    else:
-        permute = False
-        permute_smart = False
-
-    # Select options
-    select_equation = run_arguments.select_equation
-    select_term = run_arguments.select_term
-    select_permutation = run_arguments.select_permutation
-    if select_equation is not None:
-        select_equation = int(select_equation)
-    if select_term is not None:
-        select_term = int(select_term)
-    if select_permutation is not None:
-        select_permutation = int(select_permutation)
-
-    # Verbose option
-    verbose = run_arguments.verbose > 0
-
-    # 9j factorization
-    factorize_ninej = run_arguments.factorize_ninej
-
     # Start computing
-    print("% Running...")
+    print("Running...")
     start_time = datetime.datetime.now()
 
     results = []
 
     # Angular-momentum reduction
-    # amc.AMCReduction.AMCReduction(equations, output_file, doPermutations=permute, doSmartPermutations=permute_smart, verbose=verbose, print_threej=run_arguments.print_threej, factorize_ninej=factorize_ninej, keqnMaster=select_equation, ktermMaster=select_term, kpermMaster=select_permutation)
-    for equation in equations:
-        res = amc.glue.reduction.reduce_equation(equation)
+    for i, equation in enumerate(equations):
+        print("Equation {0:3d}/{1:3d}...".format(i + 1, len(equations)), flush=True)
+        res = amc.glue.reduction.reduce_equation(
+            equation,
+            collect_ninejs=run_arguments.collect_ninejs,
+            convention=run_arguments.wet_convention,
+            wet_scalar=run_arguments.wet_scalar)
         results.append(res)
 
-    print(amc.frontend.to_latex_document(results))
+    output = amc.frontend.to_latex_document(results, print_threejs=run_arguments.print_threejs)
 
-    print("%% Time elapsed: %s.\n" % (datetime.datetime.now() - start_time))
+    with open(output_file, 'wt') as f:
+        f.write(output)
 
-    print("% AMC ended successfully!")
+    print("Time elapsed: %s.\n" % (datetime.datetime.now() - start_time))
+
+    print("AMC ended successfully!")
 
 
 if __name__ == "__main__":
