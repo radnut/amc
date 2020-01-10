@@ -6,8 +6,9 @@ import argparse
 import os.path
 import datetime
 
-import amc.frontend
-import amc.glue.reduction
+import amc.output
+import amc.parser
+import amc.reduction
 
 
 def parse_command_line():
@@ -58,7 +59,7 @@ def main():
     run_arguments = parse_command_line()
 
     # Text
-    parser = amc.frontend.Parser(optimize=True)
+    parser = amc.parser.Parser(optimize=True)
     with open(run_arguments.source) as f:
         parser.parse(f.read(), debug=0)
     if run_arguments.verbose > 0:
@@ -101,14 +102,14 @@ def main():
     # Angular-momentum reduction
     for i, equation in enumerate(equations):
         print("Equation {0:3d}/{1:3d}...".format(i + 1, len(equations)), flush=True)
-        res = amc.glue.reduction.reduce_equation(
+        res = amc.reduction.reduce_equation(
             equation,
             collect_ninejs=run_arguments.collect_ninejs,
             convention=run_arguments.wet_convention,
             wet_scalar=run_arguments.wet_scalar)
         results.append(res)
 
-    output = amc.frontend.to_latex_document(results, print_threejs=run_arguments.print_threejs)
+    output = amc.output.latex.to_latex_document(results, print_threejs=run_arguments.print_threejs)
 
     with open(output_file, 'wt') as f:
         f.write(output)

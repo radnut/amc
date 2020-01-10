@@ -6,9 +6,9 @@ Created on 12.12.2019
 
 import itertools
 
-from ..frontend import _ast as ast
+from . import ast
 
-from .. import YutsisGraph
+from . import yutsis
 
 
 class ReductionError(Exception):
@@ -196,13 +196,13 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *, permute=None,
 
     ReduceTraverser().start(term)
 
-    external_idx = {i: YutsisGraph.Idx('hint', i.name, is_particle=True, external=True)
+    external_idx = {i: yutsis.Idx('hint', i.name, is_particle=True, external=True)
                     for i in lhs.depends_on}
-    internal_idx = {i: YutsisGraph.Idx('hint', i.name, is_particle=True, external=False)
+    internal_idx = {i: yutsis.Idx('hint', i.name, is_particle=True, external=False)
                     for i in internals}
     aux_idx = []
 
-    zero = YutsisGraph.Idx('int', '0', is_particle=False, zero=True)
+    zero = yutsis.Idx('int', '0', is_particle=False, zero=True)
     internal_idx[zero_ast] = zero
 
     idx = dict()
@@ -231,7 +231,7 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *, permute=None,
     clebsches += cl_lhs
     aux_idx = aux_lhs + aux_idx
 
-    Y = YutsisGraph.YutsisReduction(list(idx.values()) + aux_idx, clebsches,
+    Y = yutsis.YutsisReduction(list(idx.values()) + aux_idx, clebsches,
                                     zero)
 
     # Until we have permutations, we can only fail
@@ -337,9 +337,9 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
 
         # Create a new dummy index for the coupled angular momentum and add
         # the coupling CG to the list.
-        cpidx = YutsisGraph.Idx(YutsisGraph.Idx.coupled_type(s0[0], s1[0]),
+        cpidx = yutsis.Idx(yutsis.Idx.coupled_type(s0[0], s1[0]),
                                 is_particle=False, external=lhs)
-        cg = YutsisGraph.ClebschGordan([s0[0], s1[0], cpidx],
+        cg = yutsis.ClebschGordan([s0[0], s1[0], cpidx],
                                        [s0[1], s1[1], 1])
 
         clebsches.append(cg)
@@ -348,10 +348,10 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
 
     # Special case for simple numbers: generate a zero rank index for consistency.
     if not v.tensor.scheme:
-        return [], [YutsisGraph.Idx('int',
-                                    is_particle=False,
-                                    external=lhs,
-                                    zero=True)]
+        return [], [yutsis.Idx('int',
+                               is_particle=False,
+                               external=lhs,
+                               zero=True)]
 
     if isinstance(v.tensor.scheme[0], tuple):
         s0 = (rec(v.tensor.scheme[0]), 1)
@@ -366,10 +366,10 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
 
     # The last coupling is different from the previous ones since we have to
     # be compatible with the usual WET conventions.
-    rankidx = YutsisGraph.Idx(YutsisGraph.Idx.coupled_type(s0[0], s1[0]),
-                              is_particle=False,
-                              external=lhs,
-                              zero=(v.tensor.rank == 0))
+    rankidx = yutsis.Idx(yutsis.Idx.coupled_type(s0[0], s1[0]),
+                         is_particle=False,
+                         external=lhs,
+                         zero=(v.tensor.rank == 0))
 
     if v.tensor.rank > 0 or wet_scalar:
         if convention == 'edmonds':
@@ -386,7 +386,7 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
         s1[0].jhat -= 2
 
     # This Clebsch-Gordan is equal to a delta if the operator is scalar.
-    cg = YutsisGraph.ClebschGordan([s1[0], rankidx, s0[0]], [s1[1], 1, s0[1]])
+    cg = yutsis.ClebschGordan([s1[0], rankidx, s0[0]], [s1[1], 1, s0[1]])
 
     if v.tensor.rank == 0:
         s1[0].constrained_to = s0[0]

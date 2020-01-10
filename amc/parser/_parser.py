@@ -4,7 +4,7 @@ import re
 import fractions
 
 from ._ply import (lex, yacc)
-from ._ast import (TensorDeclaration, Index, Equation, Variable, Add, Mul, Sum, Permute)
+from ..ast import (TensorDeclaration, Index, Equation, Variable, Add, Mul, Sum, Permute)
 
 
 class LexerError(Exception):

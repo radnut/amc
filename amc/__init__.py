@@ -2,5 +2,7 @@
 
 __license__ = 'GPLv3'
 __version__ = '0.1'
-__author__  = 'AMC Dev Team'
-__email__   = 'julien.ripoche@protonmail.com'
+__author__ = 'AMC Dev Team'
+__email__ = 'julien.ripoche@protonmail.com'
+
+from . import (ast, output, parser, yutsis, reduction)

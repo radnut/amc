@@ -3,7 +3,7 @@ from __future__ import (absolute_import, print_function, division)
 import fractions
 import re
 
-from ._ast import ASTTraverser, Add
+from ..ast import ASTTraverser, Add
 
 
 class _LatexPrinter(ASTTraverser):

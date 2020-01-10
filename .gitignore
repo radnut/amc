@@ -8,8 +8,8 @@
 /dist
 /old_*
 
-/amc/frontend/_parsetab.py
-/amc/frontend/_lextab.py
+/amc/parser/_parsetab.py
+/amc/parser/_lextab.py
 
 /.project
 /.pydevproject
