@@ -8,6 +8,11 @@ from ._ast import ASTTraverser, Add
 
 class _LatexPrinter(ASTTraverser):
 
+    def __init__(self, *, print_threejs=False):
+        ASTTraverser.__init__(self)
+
+        self.print_threejs = print_threejs
+
     def n_equation_exit(self, eqn, results):
         lhs, rhs = results
         return '{} = {}'.format(lhs, rhs)
@@ -16,7 +21,11 @@ class _LatexPrinter(ASTTraverser):
         return '{}_{{{}}}'.format(v.tensor.attrs.get('latex', v.tensor.name), ' '.join(map(self._latexify_index, v.subscripts)))
 
     def n_reducedvariable_exit(self, v, _):
-        return '\* {}_{{{}}}^{{{}}}'.format(v.tensor.attrs.get('latex', v.tensor.name), ' '.join(map(self._latexify_index, v.subscripts)), ' '.join(map(self._latexify_index, v.labels)))
+        if v.subscripts:
+            return '\* {}_{{{}}}^{{{}}}'.format(v.tensor.attrs.get('latex', v.tensor.name), ' '.join(map(self._latexify_index, v.subscripts)), ' '.join(map(self._latexify_index, v.labels)))
+        else:
+            # Special case for mode-0 tensors.
+            return '\* {}'.format(v.tensor.attrs.get('latex', v.tensor.name))
 
     def n_sum_exit(self, s, result):
         if isinstance(s[0], Add):
@@ -51,7 +60,10 @@ class _LatexPrinter(ASTTraverser):
         return str(p)
 
     def n_threej_exit(self, tj, _):
-        return r'\* \threej{{{}}}{{{}}}{{{}}}'.format(*map(self._latexify_index_j, tj.indices))
+        if self.print_threejs:
+            return r'\* \threej{{{}}}{{{}}}{{{}}}'.format(*map(self._latexify_index_j, tj.indices))
+        else:
+            return ''
 
     def n_sixj_exit(self, sj, _):
         return r'\* \sixj{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}'.format(*map(self._latexify_index_j, sj.indices))
@@ -116,12 +128,12 @@ class _LatexPrinter(ASTTraverser):
         return re.sub(r'^([a-zA-Z])(\d+)$', r'{\1}_{\2}', str(s))
 
 
-def to_latex(equation):
-    lp = _LatexPrinter()
+def to_latex(equation, print_threejs=False):
+    lp = _LatexPrinter(print_threejs=print_threejs)
     return lp.start(equation)
 
 
-def to_latex_document(equations):
+def to_latex_document(equations, print_threejs=False):
     output = [r'''
 \documentclass{scrartcl}
 
@@ -160,7 +172,7 @@ def to_latex_document(equations):
             for j, term in enumerate(eqn.rhs):
                 output.append(r'\subsection{{Term {}}}'.format(j + 1))
                 output.append(r'\begin{dmath*}')
-                output.append(to_latex(term))
+                output.append(to_latex(term, print_threejs=print_threejs))
                 output.append(r'\end{dmath*}')
         else:
             output.append(r'\begin{dmath*}')
