@@ -264,7 +264,7 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *, permute=None,
     # introduced by the reduction procedure.
     yutsis_auxiliary_indices_to_ast(aux_idx, subscript_map, index_number, zero_ast)
 
-    idx = {astidx: i for i, astidx in subscript_map.items() if i.constrained_to is None}
+    idx = {astidx: i for i, astidx in subscript_map.items() if i.constrained_to is None or i.external or i.is_particle}
 
     reduced_variables = tuple(
         ast.ReducedVariable(v.tensor, v.subscripts,
@@ -275,7 +275,9 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *, permute=None,
     threejs = tuple(ast.ThreeJ(subscript_map[l] for l in t.indices) for t in Y.threejs)
     sixjs = tuple(ast.SixJ(subscript_map[l] for l in s.indices) for s in Y.sixjs)
     ninejs = tuple(ast.NineJ(subscript_map[l] for l in n.indices) for n in Y.ninejs)
-    hatfactors = tuple(ast.HatPhaseFactor(i, hatpower=idx[i].jhat, jphase=idx[i].jphase, mphase=idx[i].mphase, sign=idx[i].sign) for i in set(subscript_map.values()))
+    hatfactors = tuple(
+        ast.HatPhaseFactor(i, hatpower=idx[i].jhat, jphase=idx[i].jphase, mphase=idx[i].mphase, sign=idx[i].sign)
+        for i in sorted(set(subscript_map.values()), key=lambda astidx: astidx.name))
 
     new_mul = ast.Mul(itertools.chain(deltas, factors, hatfactors, threejs, sixjs, ninejs, reduced_variables))
     new_rhs = ast.Sum(tuple(itertools.chain(internals, (subscript_map[l] for l in aux_rhs if subscript_map[l] not in external_idx))), new_mul)
