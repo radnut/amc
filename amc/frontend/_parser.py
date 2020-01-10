@@ -35,7 +35,7 @@ class ParserSyntaxError(ParserError):
     def __init__(self, token, line, col):
         if token is not None:
             msg = "Syntax error at or near `%s' token (line {line}:{col})" % (token.type,)
-        elif self._line is not None:
+        elif line is not None:
             msg = "Syntax error at or near line {line}"
         else:
             msg = "Syntax error at end of file"
