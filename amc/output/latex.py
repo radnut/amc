@@ -128,12 +128,12 @@ class _LatexPrinter(ASTTraverser):
         return re.sub(r'^([a-zA-Z])(\d+)$', r'{\1}_{\2}', str(s))
 
 
-def to_latex(equation, print_threejs=False):
+def convert_expression(expr, print_threejs=False):
     lp = _LatexPrinter(print_threejs=print_threejs)
-    return lp.start(equation)
+    return lp.start(expr)
 
 
-def to_latex_document(equations, print_threejs=False):
+def equations_to_document(equations, print_threejs=False):
     output = [r'''
 \documentclass{scrartcl}
 
@@ -166,17 +166,17 @@ def to_latex_document(equations, print_threejs=False):
         output.append(r'\section{{Equation {}}}'.format(i + 1))
         if isinstance(eqn.rhs, Add):
             output.append(r'\begin{dmath*}')
-            output.append(to_latex(eqn.lhs) + ' = ')
+            output.append(convert_expression(eqn.lhs) + ' = ')
             output.append(r'\end{dmath*}')
 
             for j, term in enumerate(eqn.rhs):
                 output.append(r'\subsection{{Term {}}}'.format(j + 1))
                 output.append(r'\begin{dmath*}')
-                output.append(to_latex(term, print_threejs=print_threejs))
+                output.append(convert_expression(term, print_threejs=print_threejs))
                 output.append(r'\end{dmath*}')
         else:
             output.append(r'\begin{dmath*}')
-            output.append(to_latex(eqn))
+            output.append(convert_expression(eqn, print_threejs=print_threejs))
             output.append(r'\end{dmath*}')
         output.append(r'')
 

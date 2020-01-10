@@ -109,7 +109,7 @@ def main():
             wet_scalar=run_arguments.wet_scalar)
         results.append(res)
 
-    output = amc.output.latex.to_latex_document(results, print_threejs=run_arguments.print_threejs)
+    output = amc.output.latex.equations_to_document(results, print_threejs=run_arguments.print_threejs)
 
     with open(output_file, 'wt') as f:
         f.write(output)
