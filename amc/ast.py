@@ -1,3 +1,9 @@
+"""Abstract Syntax Tree classes.
+
+The ast module provides classes necessary to build abstract syntax trees for
+reduced and unreduced equations.
+"""
+
 from __future__ import (absolute_import, print_function, division)
 
 import fractions
@@ -6,7 +12,30 @@ from . import _util
 
 
 class AST(object):
-    __slots__ = ('type', '_kids', 'attr')
+    """An Abstract Syntax Tree node.
+
+    The AST node is the basic building block of the abstract syntax tree that
+    represents unreduced and reduced equations. Access to a node's children is
+    provided by subscripting:
+
+    >>> node = AST('node')
+    >>> node[:] = [AST('child')]
+    >>> node[0].type
+    'child'
+    >>> len(node), len(node[0])
+    (1, 0)
+
+    Parameters
+    ----------
+    type : `str`
+        The type of the node. Used for traversing the AST.
+
+    Attributes
+    ----------
+    type : `str`
+        The type of the node. Used for traversing the AST.
+    """
+    __slots__ = ('type', '_kids',)
 
     def __init__(self, type):
         self.type = type
@@ -27,6 +56,29 @@ class AST(object):
 
 
 class ASTTraverser(object):
+    """Base class for implementing AST traversers.
+
+    This class provides the basic facilities for traversing an AST in pre- or
+    post-order. It supports two modes of operation:
+
+    The first mode is activated by invoking the static method `traverse` on
+    the root of the tree and providing two functions ``preaction`` and
+    ``postaction``. The ``preaction`` function is called for each node before
+    its children, ``postaction`` is called after its children have been
+    traversed.
+
+    The second mode can be used by subclassing `ASTTraverser`: for each type
+    of AST node (according to the `AST.type` attribute), the methods
+    ``n_<type>`` and ``n_<type>_exit`` can be implemented. These methods will
+    be called before and after visiting the children of a node of the given
+    type. Additionally, methods named ``default`` and ``default_exit`` can be
+    provided, which will be called when the node does not have a ``type``
+    attribute or no type-specific method has been provided.
+
+    In both modes, preactions may call the static `prune` method to signal
+    that the node children should not be traversed. The postaction for this
+    node will still be called.
+    """
 
     class _PruneError(Exception):
 
@@ -34,7 +86,57 @@ class ASTTraverser(object):
             self.params = params
 
     @staticmethod
-    def traverse(root, preaction=(lambda n, **k: None), postaction=(lambda n, r, **k: None)):
+    def traverse(root, preaction=(lambda n, **k: None),
+                 postaction=(lambda n, r, **k: None)):
+        """
+        traverse(root, preaction=(lambda n, **k: None), postaction=(lambda n, r, **k: None))
+
+        Traverse the AST represented by the given `root` node.
+
+        Parameters
+        ----------
+        root : `AST`
+            The root node of the AST to traverse.
+
+        preaction : callable
+            Function to be called before visiting the given node's children.
+
+            **Parameters**
+
+            - ``node`` :
+                Current node.
+            - ``**kwargs`` :
+                Additional keyword arguments passed from the parent.
+
+            Optionally, kwargs to the node's postaction and the children's
+            preactions can be provided by returning a dict-like object. The
+            root preaction is called without parameters.
+
+        postaction : callable
+            Function to be called after visiting the given node's children.
+
+            **Parameters**
+
+            - ``node``:
+                Current node.
+            - ``results``:
+                List of return values of of all children's postactions, in
+                order.
+            - ``**kwargs``:
+                Additional keyword arguments passed from the preaction.
+
+            The return value of this function is appended to a list that is
+            passed to the parent's postaction.
+
+        Returns
+        -------
+        result
+            The return value of the root node's postaction.
+
+        See Also
+        --------
+        prune : To skip traversing a node's children.
+        """
         stack = [ (root, 'pre', None) ]
 
         results = []
@@ -74,30 +176,106 @@ class ASTTraverser(object):
         return results[0]
 
     def start(self, root):
+        """Start the AST traversal.
+
+        Starts the AST traversal beginning with the ``root``. This method is
+        intended for use with subclasses of `ASTTraverser`. For each node
+        visited, it looks for the method ``n_<type>`` and ``n_<type>_exit``,
+        respectively to use as pre- and postactions. If no appropriate methods
+        are found or the node does not have a ``type`` attribute, ``default``
+        or ``default_exit`` is called, both of which default to doing nothing.
+
+        Parameters
+        ----------
+        root : `AST`
+            The root node of the AST to traverse.
+
+        Returns
+        -------
+        result
+            The return value of the root's postaction.
+        """
         default_pre = getattr(self, 'default', lambda n, **k: None)
         default_post = getattr(self, 'default_exit', lambda n, r, **k: None)
 
-        def _pre(n):
+        def _pre(n, **k):
             if hasattr(n, 'type'):
                 method = getattr(self, 'n_' + n.type, default_pre)
             else:
                 method = default_pre
-            method(n)
+            method(n, **k)
 
-        def _post(n, r):
+        def _post(n, r, **k):
             if hasattr(n, 'type'):
                 method = getattr(self, 'n_' + n.type + '_exit', default_post)
             else:
                 method = default_post
-            return method(n, r)
+            return method(n, r, **k)
 
         return self.traverse(root, preaction=_pre, postaction=_post)
 
-    def prune(self, params=None):
+    @staticmethod
+    def prune(params=None):
+        """Stop processing the current node's children.
+
+        .. warning :: Must be called from a preaction and does not return.
+
+        Parameters
+        ----------
+        params : `dict`
+            Dictionary of kwargs to pass to the postaction.
+        """
         raise ASTTraverser._PruneError(params)
 
 
 class TensorDeclaration(AST):
+    """Tensor declaration node.
+
+    A node that declares a tensor, enabling its use in variables.
+
+    .. note:: `TensorDeclaration` nodes have type ``declare``.
+
+    Parameters
+    ----------
+    name : `str`
+        Name of the tensor.
+    mode : `int` or 2-tuple of `int`
+        Mode of the tensor, specifies the number and type of indices. If
+        ``mode`` is an integer, it has to be even, and it is assumed that the
+        tensor has ``mode // 2`` creator and ``mode // 2`` annihilator
+        indices.
+
+        If ``mode`` is a 2-tuple, the first and second members give the number
+        of creator and annihilator indices, respectively.
+    rank : `int` or `fractions.Fraction`
+        Tensor rank. Must be a (half-)integer.
+    diagonal : `bool`
+        Flag signaling that the tensor is diagonal. A diagonal tensor only has
+        half as many indices as its mode suggests, and no coupling scheme.
+    scheme : 2-tuple, optional
+        Coupling scheme of the tensor. If omitted, a default scheme is
+        generated by coupling indices left-to-right. If given, must be a tree
+        of 2-tuples with integers as leaves.
+
+        The coupling scheme is specified as follows: each index on the tensor
+        is assigned a number, starting at ``1``. A tuple of integers indicates
+        that the angular momenta of the respective indices should be coupled
+        to some collective angular momentum. An integer may be negated to
+        indicate coupling of the time-reversed state. A tuple containing a
+        tuple indicates coupling of the collective angular momenta to a new
+        angular momentum. The top-level angular momenta are coupled to the
+        tensor rank.
+
+        **Example**
+
+            ``((1,2),3)`` couples 1 and 2 to J0, and J0 and 3 to J1.
+            ``((1,-4),(3,-2))`` couples 1 and time-reversed 4 to J0, 3 and
+            time-reversed 2 to J1, and J0 and J1 to J2 (the rank of the
+            tensor).
+
+    **kwargs
+        Additional arguments, stored as a dict in the ``attrs`` attribute.
+    """
 
     def __init__(self, name, mode, rank=0, diagonal=False, scheme=None, **kwargs):
         super(TensorDeclaration, self).__init__('declare')
@@ -183,6 +361,28 @@ class TensorDeclaration(AST):
 
 
 class Equation(AST):
+    """Equation node.
+
+    Represents a reduced or unreduced equation.
+
+    .. note:: `Equation` nodes have type ``equation``.
+
+    Parameters
+    ----------
+    lhs : `Variable` or `ReducedVariable`
+        Left-hand side of the equation. Must be a variable.
+    rhs : `AST`
+        Right-hand side of the equation. Can be any expression.
+        The left-hand side introduces a set of indices, which must be the only
+        free indices on the right-hand side.
+
+    Attributes
+    ----------
+    lhs : `Variable` or `ReducedVariable`
+        Left-hand side of the equation.
+    rhs : `AST`
+        Right-hand side of the equation. Can be any expression.
+    """
 
     def __init__(self, lhs, rhs):
         super(Equation, self).__init__('equation')
@@ -200,6 +400,17 @@ class Equation(AST):
         return '{0} = {1};'.format(self.lhs, self.rhs)
 
     def expand_permutations(self):
+        """Expand permutation operators in expressions.
+
+        Expands permutation operators, turning them into sums over products of
+        permuted expressions.
+
+        Returns
+        -------
+        new_eqn : `AST`
+            New, expanded equation or ``self`` if expansion did not change the
+            right-hand side.
+        """
         if not self.rhs.contains_perm:
             return self
 
@@ -209,6 +420,22 @@ class Equation(AST):
         return Equation(self.lhs, new_rhs)
 
     def expand(self, keep_diagonal=True):
+        """Expand the equation.
+
+        Expands the right-hand side of the equation into a sum of products.
+
+        Parameters
+        ----------
+        keep_diagonal : `bool`
+            If set, keeps diagonal subterms, like sums of diagonal tensors,
+            unexpanded.
+
+        Returns
+        -------
+        new_eqn : `AST`
+            New, expanded equation or ``self`` if expansion did not change the
+            right-hand side.
+        """
         new_rhs = self.rhs.expand(keep_diagonal)
         if id(new_rhs) == id(self.rhs):
             return self
@@ -216,6 +443,39 @@ class Equation(AST):
 
 
 class Index(object):
+    """Index object.
+
+    Represents a tensor index.
+
+    Parameters
+    ----------
+    name : str
+        Name of the index.
+    type : {'int', 'hint'}
+        Type of the index. Must be 'int' for integer indices, or 'hint' for
+        half-integers.
+    class_ : {'am', 'part'}
+        Index class. Must be 'am' for simple angular-momentum indices, or
+        'part' for particle indices. 'part' indicates that the index ranges
+        over the full single-particle basis instead of just an angular
+        momentum.
+
+    Attributes
+    ----------
+    name : str
+        Name of the index.
+    type : {'int', 'hint'}
+        Type of the index. Must be 'int' for integer indices, or 'hint' for
+        half-integers.
+    class_ : {'am', 'part'}
+        Index class. Must be 'am' for simple angular-momentum indices, or
+        'part' for particle indices. 'part' indicates that the index ranges
+        over the full single-particle basis instead of just an angular
+        momentum.
+    constrained_to : `Index` or `None`
+        Index object that this index is constrained to via a delta constraint.
+    """
+
 
     def __init__(self, name, type, class_):
         if type not in ('int', 'hint'):
@@ -237,12 +497,44 @@ class Index(object):
 
     @staticmethod
     def coupled_type(i1, i2):
+        """Get the coupled type for an index pair.
+
+        Parameters
+        ----------
+        i1, i2 : `Index`
+            The indices to couple.
+
+        Returns
+        -------
+        cptype : `str`
+            The index type resulting from coupling ``i1`` and ``i2`` together.
+        """
         if (i1.type == 'hint' and i2.type == 'hint') or (i1.type == 'int' and i2.type == 'int'):
             return 'int'
         return 'hint'
 
 
 class Variable(AST):
+    """Unreduced tensor variable node.
+
+    .. note:: `Variable` nodes have type ``variable``.
+
+    Parameters
+    ----------
+    tensor : `TensorDeclaration`
+        The tensor that this variable belongs to.
+    subscripts : `tuple` of `Index`
+        List of subscripts. Length must be compatible with ``tensor.mode``.
+
+    Attributes
+    ----------
+    tensor : `TensorDeclaration`
+        The tensor that this variable belongs to.
+    subscripts : `tuple` of `Index`
+        List of subscripts.
+    depends_on : `set` of `Index`
+        Set of the subscript indices.
+    """
 
     def __init__(self, tensor, subscripts):
         super(Variable, self).__init__('variable')
@@ -263,6 +555,19 @@ class Variable(AST):
         return '{0}_{{{1}}}'.format(self.tensor.name, ' '.join(map(str, self.subscripts)))
 
     def apply_permutation(self, i, j):
+        """Permute two indices.
+
+        Parameters
+        ----------
+        i, j : `Index`
+            Indices to permute.
+
+        Returns
+        -------
+        new_var
+            New variable with indices ``i`` and ``j`` exchanged, or ``self``
+            if the Variable is independent of both.
+        """
         ij = {i, j}
 
         if ij.isdisjoint(self.depends_on):
@@ -275,6 +580,31 @@ class Variable(AST):
 
 
 class ReducedVariable(AST):
+    """Reduced tensor variable node.
+
+    .. note:: `ReducedVariable` nodes have type ``reducedvariable``.
+
+    Parameters
+    ----------
+    tensor : `TensorDeclaration`
+        The tensor that this variable belongs to.
+    subscripts : `tuple` of `Index`
+        List of subscripts. Length must be compatible with ``tensor.mode``.
+    labels : `tuple` of `Index`
+        List of additional angular-momentum labels. Must be compatible with
+        ``tensor.scheme``.
+
+    Attributes
+    ----------
+    tensor : `TensorDeclaration`
+        The tensor that this variable belongs to.
+    subscripts : `tuple` of `Index`
+        List of subscripts.
+    labels : `tuple` of `Index`
+        List of additional angular-momentum labels.
+    depends_on : `set` of `Index`
+        Set of the subscript and label indices.
+    """
 
     def __init__(self, tensor, subscripts, labels):
         super(ReducedVariable, self).__init__('reducedvariable')
@@ -299,6 +629,19 @@ class ReducedVariable(AST):
         return '{0}_{{{1}}}^{{{2}}}'.format(self.tensor.name, ' '.join(map(str, self.subscripts)), ' '.join(map(str, self.labels)))
 
     def apply_permutation(self, i, j):
+        """Permute two indices.
+
+        Parameters
+        ----------
+        i, j : `Index`
+            Indices to permute.
+
+        Returns
+        -------
+        new_var
+            New variable with indices ``i`` and ``j`` exchanged, or ``self``
+            if the ReducedVariable is independent of both.
+        """
         ij = {i, j}
 
         if ij.isdisjoint(self.depends_on):
@@ -307,10 +650,29 @@ class ReducedVariable(AST):
         subst = {i: j, j: i}
 
         new_subscripts = tuple(subst.get(s, s) for s in self.subscripts)
-        return Variable(self.tensor, new_subscripts)
+        new_labels = tuple(subst.get(s, s) for s in self.labels)
+        return ReducedVariable(self.tensor, new_subscripts, new_labels)
 
 
 class ThreeJ(AST):
+    """3j node.
+
+    Represents a triangular inequality between three indices.
+
+    .. note:: `ThreeJ` nodes have type ``threej``.
+
+    Parameters
+    ----------
+    indices : 3-tuple of `Index`
+        Indices constrained by the 3j symbol.
+
+    Attributes
+    ----------
+    depends_on : `set` of `Index`
+        Set of the three indices.
+    indices : 3-tuple of `Index`
+        Indices constrained by the 3j symbol.
+    """
 
     def __init__(self, indices):
         super(ThreeJ, self).__init__('threej')
@@ -333,6 +695,24 @@ class ThreeJ(AST):
 
 
 class SixJ(AST):
+    """6j node.
+
+    Represents a Wigner 6j symbol.
+
+    .. note:: `SixJ` nodes have type ``sixj``.
+
+    Parameters
+    ----------
+    indices : 6-tuple of `Index`
+        Indices of the 6j symbol.
+
+    Attributes
+    ----------
+    depends_on : `set` of `Index`
+        Set of the indices.
+    indices : 6-tuple of `Index`
+        Indices of the 6j symbol.
+    """
 
     def __init__(self, indices):
         super(SixJ, self).__init__('sixj')
@@ -355,6 +735,24 @@ class SixJ(AST):
 
 
 class NineJ(AST):
+    """9j node.
+
+    Represents a Wigner 9j symbol.
+
+    .. note:: `NineJ` nodes have type ``ninej``.
+
+    Parameters
+    ----------
+    indices : 9-tuple of `Index`
+        Indices of the 9j symbol.
+
+    Attributes
+    ----------
+    depends_on : `set` of `Index`
+        Set of the indices.
+    indices : 9-tuple of `Index`
+        Indices of the 9j symbol.
+    """
 
     def __init__(self, indices):
         super(NineJ, self).__init__('ninej')
@@ -374,6 +772,24 @@ class NineJ(AST):
 
 
 class DeltaJ(AST):
+    """DeltaJ node.
+
+    Represents a delta constraint on angular momenta.
+
+    .. note:: `DeltaJ` nodes have type ``deltaj``.
+
+    Parameters
+    ----------
+    a, b : `Index`
+        Indices to be constrained.
+
+    Attributes
+    ----------
+    a, b : `Index`
+        Constrained indices.
+    depends_on : `set` of `Index`
+        Set of the two constrained indices.
+    """
 
     def __init__(self, a, b):
         super(DeltaJ, self).__init__('deltaj')
@@ -386,8 +802,42 @@ class DeltaJ(AST):
 
 
 class HatPhaseFactor(AST):
+    """Combined node for hat and phase factors.
 
-    def __init__(self, *args, **kwargs):
+    Represents the terms :math:`(-1)^{xj+ym} (\\sqrt{2j+1})^z`.
+
+    .. note:: `HatPhaseFactor` nodes have type ``hatphasefactor``.
+
+    Parameters
+    ----------
+    index : `Index`
+        Index associated with the hat-phase factor.
+    hatpower : integer
+        Power of the hat factor :math:`\\sqrt{2j+1}`.
+    jphase : integer
+        Multiplier of ``j`` in the phase factor.
+    mphase : integer
+        Multiplier of ``m`` in the phase factor.
+    sign : {+1, -1}
+        Overall sign.
+
+    Notes
+    -----
+    The constructor might return an `int` or a `Mul`.
+
+    Attributes
+    ----------
+    index : `Index`
+        Index associated with the hat-phase factor.
+    hatpower : integer
+        Power of the hat factor :math:`\\sqrt{2j+1}`.
+    jphase : integer
+        Multiplier of ``j`` in the phase factor.
+    mphase : integer
+        Multiplier of ``m`` in the phase factor.
+    """
+
+    def __init__(self, index, hatpower=0, jphase=0, mphase=0, sign=1):
         pass
 
     def __new__(cls, index, hatpower=0, jphase=0, mphase=0, sign=1):
@@ -427,6 +877,30 @@ class HatPhaseFactor(AST):
 
 
 class Add(AST):
+    """Add node.
+
+    Represents an addition of terms.
+
+    .. note:: `Add` nodes have type ``add``.
+
+    Parameters
+    ----------
+    terms : iterable
+        Terms to add.
+
+    Notes
+    -----
+    The constructor simplifies the terms, removing zeros and splicing contents
+    of `Add` objects. It may, therefore, not return an `Add` object at all,
+    e.g., if there is only one term.
+
+    Attributes
+    ----------
+    contains_perm : bool
+        Flag to signal that at least one term contains a permutation operator.
+    depends_on : `set` of `Index`
+        Set of all indices the terms depend on.
+    """
 
     def __init__(self, terms):
         pass
@@ -467,7 +941,12 @@ class Add(AST):
         return ' + '.join(str(k) for k in self)
 
     def is_diagonal(self):
+        """Check if all variables contained in terms are diagonal.
 
+        Returns
+        -------
+        True if all terms are diagonal.
+        """
         def _rec(t):
             if isinstance(t, Variable):
                 return t.tensor.diagonal
@@ -479,6 +958,23 @@ class Add(AST):
         return _rec(self)
 
     def distribute(self, terms, side='right', keep_diagonal=True):
+        """Apply the distributive law to turn a `Mul` of `Add` into an `Add`
+        of `Mul`.
+
+        Parameters
+        ----------
+        terms : `list` of `AST`
+            Factors of the product to distribute.
+        side : {'left', 'right'}
+            Indicates whether the ``terms`` are on the left or right side of
+            this `Add`.
+        keep_diagonal : bool
+            If True, keeps diagonal terms undistributed.
+
+        Returns
+        -------
+        An `Add` or `Mul` instance containing the distributed terms.
+        """
         if not terms:
             return self
 
@@ -496,6 +992,17 @@ class Add(AST):
         return Add(new_terms)
 
     def expand_permutations(self):
+        """Expand permutation operators in terms.
+
+        Expands permutation operators, turning them into sums over products of
+        permuted expressions.
+
+        Returns
+        -------
+        new_add : `Add`
+            New, expanded `Add` or ``self`` if expansion did not change
+            the object.
+        """
         if not self.contains_perm:
             return self
 
@@ -516,6 +1023,19 @@ class Add(AST):
             return self
 
     def apply_permutation(self, i, j):
+        """Permute two indices in all terms.
+
+        Parameters
+        ----------
+        i, j : `Index`
+            Indices to permute.
+
+        Returns
+        -------
+        new_add : `Add`
+            New `Add` with indices ``i`` and ``j`` exchanged, or ``self`` if
+            the object is independent of both.
+        """
         ij = {i, j}
 
         if ij.isdisjoint(self.depends_on):
@@ -538,6 +1058,22 @@ class Add(AST):
             return self
 
     def expand(self, keep_diagonal=True):
+        """Expand the terms of the `Add`.
+
+        Expands each term into a sum of products.
+
+        Parameters
+        ----------
+        keep_diagonal : `bool`
+            If set, keeps diagonal subterms, like sums of diagonal tensors,
+            unexpanded.
+
+        Returns
+        -------
+        new_add : `Add`
+            New, expanded `Add` or ``self`` if expansion did not change the
+            terms.
+        """
         changed = False
         terms = []
         for t in self:
@@ -556,6 +1092,30 @@ class Add(AST):
 
 
 class Mul(AST):
+    """Multiplication node.
+
+    Represents a multiplication of factors.
+
+    .. note:: `Mul` nodes have type ``mul``.
+
+    Parameters
+    ----------
+    terms : iterable
+        Factors to multiply.
+
+    Notes
+    -----
+    The constructor cleans up the list of terms, removing factors of one,
+    splicing `Mul` factors, and collecting numerical factors. Depending on the
+    nature and number of factors, the resulting object may not be a `Mul`.
+
+    Attributes
+    ----------
+    contains_perm : bool
+        Flag to signal that at least one factor contains a permutation operator.
+    depends_on : `set` of `Index`
+        Set of all indices the factors depend on.
+    """
 
     def __init__(self, terms):
         pass
@@ -610,6 +1170,17 @@ class Mul(AST):
         return '*'.join(factors)
 
     def expand_permutations(self):
+        """Expand permutation operators in factors.
+
+        Expands permutation operators, turning them into sums of permuted
+        expressions.
+
+        Returns
+        -------
+        new_mul : `Mul`
+            New, expanded `Mul` or ``self`` if expansion did not change
+            the object.
+        """
         if not self.contains_perm:
             return self
 
@@ -635,6 +1206,19 @@ class Mul(AST):
             return self
 
     def apply_permutation(self, i, j):
+        """Permute two indices in all factors.
+
+        Parameters
+        ----------
+        i, j : `Index`
+            Indices to permute.
+
+        Returns
+        -------
+        new_mul : `Mul`
+            New `Mul` with indices ``i`` and ``j`` exchanged, or ``self`` if
+            the object is independent of both.
+        """
         ij = {i, j}
 
         if ij.isdisjoint(self.depends_on):
@@ -657,6 +1241,23 @@ class Mul(AST):
             return self
 
     def expand(self, keep_diagonal=True):
+        """Expand the factors of the `Mul`.
+
+        Expands all factors, then distributes over each `Add` factor.
+
+        Parameters
+        ----------
+        keep_diagonal : `bool`
+            If set, keeps diagonal subterms, like sums of diagonal tensors,
+            unexpanded.
+
+        Returns
+        -------
+        new_expr
+            New, expanded expression. May be ``self`` if the expansion did not
+            change anything. In most cases the returned expression is a `Mul`
+            without `Add` factors or an `Add` of `Mul` terms.
+        """
         has_distributable_terms = False
 
         expanded_terms = [ t.expand(keep_diagonal) if hasattr(t, 'expand') else t for t in self ]
@@ -697,6 +1298,34 @@ class Mul(AST):
 
 
 class Sum(AST):
+    """Summation node.
+
+    Represents a sum over indices.
+
+    .. note:: `Sum` nodes have type ``sum``.
+
+    Parameters
+    ----------
+    subscripts : iterable of `Index`
+        Indices that are summed over.
+    expression : `AST`
+        Body of the sum.
+
+    Notes
+    -----
+    The constructor cleans up the expression, factoring out factors that do
+    not depend on the summed indices, and coalescing sub-sums. Therefore, the
+    returned object might be a `Mul` or an `int`.
+
+    Attributes
+    ----------
+    contains_perm : bool
+        Flag to signal that at least one factor contains a permutation operator.
+    depends_on : `set` of `Index`
+        Indices the expression depends on but are not summed over.
+    subscripts : `set` of `Index`
+        Indices that are summed over.
+    """
 
     def __init__(self, subscripts, expression):
         pass
@@ -750,6 +1379,26 @@ class Sum(AST):
         return 'sum_{{{0}}}({1!s})'.format(' '.join(sorted(str(s) for s in self.subscripts)), self[0])
 
     def distribute(self, terms, side='right', keep_diagonal=False):
+        """Distribute the sum over the given terms.
+
+        Pulls the given terms into the sum.
+
+        Parameters
+        ----------
+        terms : `list` of `AST`
+            Factors of the product to distribute.
+        side : {'left', 'right'}
+            Indicates whether the ``terms`` are on the left or right side of
+            this `Sum`.
+        keep_diagonal : bool
+            If True, keeps diagonal terms undistributed.
+
+        Returns
+        -------
+        new_sum : `Sum`
+            A `Sum` containing a `Mul` of the terms with the original
+            body.
+        """
         if not terms:
             return self
 
@@ -759,12 +1408,32 @@ class Sum(AST):
             return Sum(self.subscripts, Mul(terms + [self[0]]))
 
     def expand_permutations(self):
+        """Expand permutations in the sum body.
+
+        Returns
+        -------
+        A new `Sum` with permutations expanded, or ``self`` if there are no
+        permutations in the body.
+        """
         if not self.contains_perm:
             return self
 
         return Sum(self.subscripts, self[0].expand_permutations())
 
     def apply_permutation(self, i, j):
+        """Permute two indices in the sum body.
+
+        Parameters
+        ----------
+        i, j : `Index`
+            Indices to permute.
+
+        Returns
+        -------
+        new_sum : `Sum`
+            New `Sum` with indices ``i`` and ``j`` exchanged, or ``self`` if
+            the object is independent of both.
+        """
         ij = {i, j}
 
         if not ij.isdisjoint(self.subscripts):
@@ -780,6 +1449,22 @@ class Sum(AST):
             return self
 
     def expand(self, keep_diagonal=True):
+        """Expand the sum body.
+
+        If the body expands to an `Add`, distribute the sum over each term.
+
+        Parameters
+        ----------
+        keep_diagonal : `bool`
+            If set, keeps diagonal subterms, like sums of diagonal tensors,
+            unexpanded.
+
+        Returns
+        -------
+        new_expr
+            New, expanded expression. May be ``self`` if the expansion did not
+            change anything.
+        """
         if not hasattr(self[0], 'expand'):
             return self
 
@@ -795,6 +1480,33 @@ class Sum(AST):
 
 
 class Permute(AST):
+    r"""Permute node.
+
+    Represents a permutation or transposition operator.
+
+    .. note:: `Permute` nodes have type `permute`.
+
+    The permute operator supports two modes of operation: With a single set,
+    it acts as a transposition operator. With multiple sets, it generates all
+    distinct permutations between indices of different sets, along with the
+    appropriate sign of the permutation, e.g.
+
+    .. math::
+        P(a/b) &= 1 - P(ab) \\
+        P(ab/c) &= 1 - P(ac) - P(bc).
+
+    Parameters
+    ----------
+    sets : iterable of iterable of `Index`
+        Sets of indices to be permuted.
+
+    Attributes
+    ----------
+    contains_perm : `bool`
+        Always `True`.
+    depends_on : `set` of `Index`
+        Set of all indices appearing in the permute object.
+    """
 
     def __init__(self, sets):
         super(Permute, self).__init__('permute')
@@ -818,6 +1530,20 @@ class Permute(AST):
         return 'P({})'.format('/'.join('{{{}}}'.format(' '.join(str(k) for k in s)) for s in self.sets))
 
     def apply_operator(self, terms):
+        """Apply the Permute operator to the provided factors.
+
+        Parameters
+        ----------
+        terms : iterable
+            Factors the `Permute` acts on. It is assumed that the factors
+            belong to a `Mul`.
+
+        Returns
+        -------
+        mul_or_add
+            Depending on operation mode, a `Mul` with indices transposed, or
+            an `Add` with all generated terms.
+        """
         # Transposition-type operator
         if len(self.sets) == 1:
             factors = []
@@ -845,6 +1571,20 @@ class Permute(AST):
         return Add(add_terms)
 
     def apply_permutation(self, i, j):
+        """Permute two indices in the permutation sets.
+
+        Parameters
+        ----------
+        i, j : `Index`
+            Indices to permute.
+
+        Returns
+        -------
+        new_perm : `Permute`
+            New `Permute` with indices ``i`` and ``j`` exchanged, or ``self``
+            if the object is independent of both, or the permutation had no
+            effect.
+        """
         ij = {i, j}
 
         # This permutation is independent of the given indices.
@@ -860,7 +1600,7 @@ class Permute(AST):
         for s in new_sets:
             if not ij.disjoint(s):
                 # The index to be replaced appears in both ij and s and is therefore removed by the
-                # symmetric difference. THe case that both i and j are in s is excluded because
+                # symmetric difference. The case that both i and j are in s is excluded because
                 # then ij would be a subset of s.
                 s ^= ij
 

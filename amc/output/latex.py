@@ -1,3 +1,5 @@
+"""LaTeX output for reducedand unreduced equations."""
+
 from __future__ import (absolute_import, print_function, division)
 
 import fractions
@@ -129,11 +131,51 @@ class _LatexPrinter(ASTTraverser):
 
 
 def convert_expression(expr, print_threejs=False):
+    """Convert an expression to a LaTeX string.
+
+    The output is meant to be used in a ``dmath`` environment defined by the
+    ``breqn`` LaTeX package.
+
+    Parameters
+    ----------
+    expr : `ast.AST`
+        An expression represented by an abstract syntax tree.
+    print_threejs : `bool`
+        Output 3j triangular constraints. In general, these are unnecessary
+        because the constraints are implicitly contained in the tensor
+        variables.
+
+    Returns
+    -------
+    latex : `str`
+        A LaTeX representation of the expression.
+    """
     lp = _LatexPrinter(print_threejs=print_threejs)
     return lp.start(expr)
 
 
 def equations_to_document(equations, print_threejs=False):
+    """Convert a list of equations to a complete LaTeX document.
+
+    Generates a section for each equation in the list, and subsections for
+    each term if the root of the right-hand side expression is an `ast.Add`
+    operation. Automatic line breaking of the generated equations is provided
+    by the ``breqn`` LaTeX package.
+
+    Parameters
+    ----------
+    equations : iterable of `ast.Equation`
+        Equations to process.
+    print_threejs : `bool`
+        Output 3j triangular constraints. In general, these are unnecessary
+        because the constraints are implicitly contained in the tensor
+        variables.
+
+    Returns
+    -------
+    latex : `str`
+        A LaTeX document as a string.
+    """
     output = [r'''
 \documentclass{scrartcl}
 

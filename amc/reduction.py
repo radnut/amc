@@ -1,9 +1,4 @@
-'''
-Created on 12.12.2019
-
-@author: wirth
-'''
-
+"""Functions for the AMC reduction of equations."""
 import itertools
 
 from . import ast
@@ -19,30 +14,35 @@ class ReductionError(Exception):
 def reduce_equation(equation, *, permute=None, collect_ninejs=False,
                     convention='edmonds', wet_scalar=False,
                     monitor=lambda t, nt, p, np: None):
-    """Reduce the given equation to angular-momentum coupled form.
+    """reduce_equation(equation, *, permute=None, collect_ninejs=False,
+                    convention='edmonds', wet_scalar=False,
+                    monitor=lambda t, nt, p, np: None)
+
+    Reduce the given equation to angular-momentum coupled form.
 
     Parameters
     ----------
-    equation : amc.ast.Equation
+    equation : `ast.Equation`
         Equation to reduce.
 
-    permute : {False, True, 'smart'}
+    permute : {`False`, `True`, 'smart'}
         .. warning:: Not yet implemented.
+
         Permute tensor subscripts in order to get a simpler coupled
         expression. If set to 'smart', only try permutations most likely to
         succeed.
 
-    collect_ninejs : bool
+    collect_ninejs : `bool`
         Try to construct 9j-symbols from sums over products of 6j-symbols.
 
     convention : {'edmonds', 'sakurai'}
         Use the given convention for Wigner-Eckart reduced matrix elements.
 
-    wet_scalar : bool
+    wet_scalar : `bool`
         Use reduced matrix elements also for scalar tensors. Default is to use
         the unreduced matrix elements.
 
-    monitor: callable(term : int, nterms : int, perm : int, nperms : int)
+    monitor: callable(term: `int`, nterms: `int`, perm: `int`, nperms: `int`)
         Called once for each permutation processed. `term` and `perm` are
         zero-based.
 
@@ -97,58 +97,63 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
     return ast.Equation(new_lhs, new_rhs)
 
 
-def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *, permute=None, collect_ninejs=False,
-                convention='edmonds', wet_scalar=False,
-                monitor=lambda p, np: None):
-    """Reduce a single term into angular-momentum coupled form.
+def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
+                permute=None, collect_ninejs=False, convention='edmonds',
+                wet_scalar=False, monitor=lambda p, np: None):
+    """reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
+                   permute=None, collect_ninejs=False, convention='edmonds',
+                   wet_scalar=False, monitor=lambda p, np: None)
+
+    Reduce a single term into angular-momentum coupled form.
 
     Parameters
     ----------
-    lhs : amc.ast.Variable
+    lhs : `ast.Variable`
         Left-hand side of the equation.
 
-    aux_lhs_ast: list of amc.ast.Index
+    aux_lhs_ast: `list` of `ast.Index`
         Auxiliary indices of the reduced left-hand side tensor.
 
-    term : amc.ast.Product or amc.ast.Sum
+    term : `ast.Mul` or `ast.Sum`
         Term to reduce. Should be a single sum over a product of tensor
         variables.
 
-    index_number: dict {'hint': int, 'int': int}
+    index_number : `dict` {'hint': `int`, 'int': `int`}
         Dictionary holding the counters for automatically generating auxiliary
         indices. Values should be large enough so that new generated names do
         not alias left-hand auxiliary indices.
 
-    zero_ast : amc.ast.Index
+    zero_ast : `ast.Index`
         Index denoting a zero angular momentum.
 
-    permute : {False, True, 'smart'}
+    permute : {`False`, `True`, 'smart'}
         .. warning:: Not yet implemented.
+
         Permute tensor subscripts in order to get a simpler coupled
         expression. If set to 'smart', only try permutations most likely to
         succeed.
 
-    collect_ninejs : bool
+    collect_ninejs : `bool`
         Try to construct 9j-symbols from sums over products of 6j-symbols.
 
     convention : {'edmonds', 'sakurai'}
         Use the given convention for Wigner-Eckart reduced matrix elements.
 
-    wet_scalar : bool
+    wet_scalar : `bool`
         Use reduced matrix elements also for scalar tensors. Default is to use
         the unreduced matrix elements.
 
-    monitor: callable(perm : int, nperms : int)
+    monitor: callable(perm : `int`, nperms : `int`)
         Called once for each permutation processed. `perm` is zero-based.
 
     Returns
     -------
-    amc.ast.Sum or amc.ast.Product
+    `ast.Sum` or `ast.Mul`
         The angular-momentum reduced term.
 
     Raises
     ------
-    amc.reduction.ReductionError
+    `reduction.ReductionError`
         If the Yutsis graph cannot be fully reduced.
     """
 
@@ -231,6 +236,12 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *, permute=None,
     clebsches += cl_lhs
     aux_idx = aux_lhs + aux_idx
 
+    for i in list(idx.values()) + aux_idx:
+        print(i)
+
+    for i in clebsches:
+        print(i)
+
     Y = yutsis.YutsisReduction(list(idx.values()) + aux_idx, clebsches,
                                     zero)
 
@@ -292,20 +303,20 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
 
     Parameters
     ----------
-    v : amc.ast.Variable
+    v : `ast.Variable`
         The tensor variable.
 
-    idx : dict(amc.ast.Index: amc.yutsis.Idx)
+    idx : `dict`(`ast.Index`: `yutsis.Idx`)
         Mapping from AST indices to Yutsis graph indices
 
     convention : {'edmonds', 'sakurai'}
         Use the given convention for Wigner-Eckart reduced matrix elements.
 
-    wet_scalar : bool
+    wet_scalar : `bool`
         Use reduced matrix elements also for scalar tensors. Default is to use
         the unreduced matrix elements.
 
-    lhs : bool
+    lhs : `bool`
         Set to True to generate the Clebsch-Gordan network for the variable on
         the left-hand side to reduce the right-hand side of the equation.
         Depending on `convention` and `wet_scalar`, this needs some additional
@@ -314,10 +325,10 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
 
     Returns
     -------
-    clebsches : list of amc.yutsis.ClebschGordan
+    clebsches : `list` of `yutsis.ClebschGordan`
         List of Clebsch-Gordan coefficients needed to (un-)reduce the variable
 
-    aux : list of amc.yutsis.Idx
+    aux : `list` of `yutsis.Idx`
         List of additional angular-momentum indices generated in the reduction
         process.
     """
@@ -390,9 +401,6 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
     # This Clebsch-Gordan is equal to a delta if the operator is scalar.
     cg = yutsis.ClebschGordan([s1[0], rankidx, s0[0]], [s1[1], 1, s0[1]])
 
-    if v.tensor.rank == 0:
-        s1[0].constrained_to = s0[0]
-
     clebsches.append(cg)
     aux.append(rankidx)
     return clebsches, aux
@@ -415,12 +423,12 @@ def handle_deltas(Y):
 
     Parameters
     ----------
-    Y : amc.yutsis.Graph
+    Y : `yutsis.Graph`
         Yutsis graph to process.
 
     Returns
     -------
-    dict(amc.yutsis.Idx: amc.yutsis.Idx)
+    `dict`(`yutsis.Idx`: `yutsis.Idx`)
         mapping from all encountered indices to their independent index.
     """
 
@@ -482,21 +490,21 @@ def generate_auxiliary_ast_indices(v, index_number, zero):
 
     Parameters
     ----------
-    v : amc.ast.Variable
+    v : `ast.Variable`
         Tensor variable.
 
-    index_number: dict {'hint': int, 'int': int}
+    index_number : `dict` {'hint': `int`, 'int': `int`}
         Dictionary holding the counters for automatically generating auxiliary
         indices. Values should be large enough so that new generated names do
         not alias already existing ones.
 
-    zero : amc.ast.Index
+    zero : `ast.Index`
         AST index to use for zero indices.
 
     Returns
     -------
-    list of amc.ast.Index
-        List of generated indices
+    `list` of `ast.Index`
+        List of generated indices.
     """
     aux_ast = []
 
@@ -547,23 +555,23 @@ def yutsis_auxiliary_indices_to_ast(aux_idx, subscript_map, index_number, zero):
     """Generate AST indices for unconstrained Yutsis indices.
 
     Generates new AST indices for the given list of Yutsis indices, and adds
-    them to `subscript_map`.
+    them to ``subscript_map``.
 
     Parameters
     ----------
-    aux_idx : list of amc.yutsis.Idx
+    aux_idx : `list` of `yutsis.Idx`
         List of Yutsis indices to process.
 
-    subscript_map : dict(amc.yutsis.Idx: amc.ast.Index)
+    subscript_map : `dict`(`yutsis.Idx`: `amc.ast.Index`)
         Mapping from Yutsis indices to known AST indices, e.g., external indices.
         New indices are added to this mapping.
 
-    index_number: dict {'hint': int, 'int': int}
+    index_number : `dict` {'hint': `int`, 'int': `int`}
         Dictionary holding the counters for automatically generating auxiliary
         indices. Values should be large enough so that new generated names do
         not alias already existing ones.
 
-    zero : amc.ast.Index
+    zero : `ast.Index`
         AST index to use for zero indices.
     """
     for idx in aux_idx:
