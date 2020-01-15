@@ -6,6 +6,7 @@
 /amc.egg-info
 /build
 /dist
+/docs/_build/
 /old_*
 
 /amc/parser/_parsetab.py
