@@ -64,8 +64,11 @@ class ThreeJM:
         # ( m1 m2 m3 ) = (-1)^{j1+j2+j3} ( m1 m3 m2 ) = ...
 
         # Necessary conditions
-        if not (k1 in range(3) and k2 in range(3) and k1 != k2):
+        if not (k1 in range(3) and k2 in range(3)):
             raise ValueError('invalid indices')
+
+        if k1 == k2:
+            return
 
         # Exchange index
         idx = self.indices[k1]
