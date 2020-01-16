@@ -236,17 +236,35 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
     clebsches += cl_lhs
     aux_idx = aux_lhs + aux_idx
 
-    for i in list(idx.values()) + aux_idx:
-        print(i)
+    # Generate additional tensor-coupling clebsches for nonscalar operators.
+    rankindices = [aux[-1] for v, aux in jvariables]
+    rankidx_lhs = aux_lhs[-1]
 
-    for i in clebsches:
-        print(i)
+    if len(rankindices) == 1:
+        # If there is only one tensor on the right-hand side, its rank has to be identical to the
+        # left-hand side rank.
+        clebsches.append(yutsis.ClebschGordan([rankindices[0], zero, rankidx_lhs], [+1, +1, +1]))
+    else:
+        # If there is more than one tensor, we couple them left-to-right to intermediate angular
+        # momenta. The final angular momentum is the one on the left-hand side.
+        for k, i in enumerate(rankindices):
+            if k == 0:
+                left_idx = i
+                continue
+            if k + 1 == len(rankindices):
+                new_idx = rankidx_lhs
+            else:
+                new_idx = yutsis.Idx(yutsis.Idx.coupled_type(left_idx, i),
+                                     is_particle=False, external=False)
+                aux_idx.append(new_idx)
+            clebsches.append(yutsis.ClebschGordan([left_idx, i, new_idx], [+1, +1, +1]))
+            left_idx = new_idx
 
     Y = yutsis.YutsisReduction(list(idx.values()) + aux_idx, clebsches,
                                     zero)
 
-    # Until we have permutations, we can only fail
     if Y.get_number_of_nodes() != 0:
+        # Full reduction failed. Until we have permutations, we can only fail here.
         raise ReductionError()
 
     for sixj in Y.sixjs:
@@ -395,7 +413,7 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
     # where the LHS tensor is an unreduced scalar, we have to add an
     # additional j1 hat factor to cancel the unrestricted m sum that remains
     # after the reduction.
-    if lhs and not wet_scalar:
+    if lhs and v.tensor.rank == 0 and not wet_scalar:
         s1[0].jhat -= 2
 
     # This Clebsch-Gordan is equal to a delta if the operator is scalar.
