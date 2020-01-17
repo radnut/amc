@@ -400,9 +400,9 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
     rankidx = yutsis.Idx(yutsis.Idx.coupled_type(s0[0], s1[0]),
                          is_particle=False,
                          external=lhs,
-                         zero=(v.tensor.rank == 0))
+                         zero=v.tensor.scalar)
 
-    if v.tensor.rank > 0 or wet_scalar:
+    if not v.tensor.scalar or wet_scalar:
         if convention == 'edmonds':
             rankidx.jphase += 2
             s0[0].jhat -= 1
@@ -413,7 +413,7 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
     # where the LHS tensor is an unreduced scalar, we have to add an
     # additional j1 hat factor to cancel the unrestricted m sum that remains
     # after the reduction.
-    if lhs and v.tensor.rank == 0 and not wet_scalar:
+    if lhs and v.tensor.scalar and not wet_scalar:
         s1[0].jhat -= 2
 
     # This Clebsch-Gordan is equal to a delta if the operator is scalar.
@@ -557,7 +557,7 @@ def generate_auxiliary_ast_indices(v, index_number, zero):
     else:
         s1 = v.subscripts[abs(v.tensor.scheme[1]) - 1]
 
-    if v.tensor.rank == 0:
+    if v.tensor.scalar:
         aux_ast.append(zero)
     else:
         cptype = ast.Index.coupled_type(s0, s1)

@@ -247,8 +247,8 @@ class TensorDeclaration(AST):
 
         If ``mode`` is a 2-tuple, the first and second members give the number
         of creator and annihilator indices, respectively.
-    rank : `int` or `fractions.Fraction`
-        Tensor rank. Must be a (half-)integer.
+    scalar : `bool`
+        `True` if tensor has rank zero, `False` otherwise.
     diagonal : `bool`
         Flag signaling that the tensor is diagonal. A diagonal tensor only has
         half as many indices as its mode suggests, and no coupling scheme.
@@ -277,7 +277,7 @@ class TensorDeclaration(AST):
         Additional arguments, stored as a dict in the ``attrs`` attribute.
     """
 
-    def __init__(self, name, mode, rank=0, diagonal=False, scheme=None, **kwargs):
+    def __init__(self, name, mode, scalar=True, diagonal=False, scheme=None, **kwargs):
         super(TensorDeclaration, self).__init__('declare')
 
         try:
@@ -293,11 +293,7 @@ class TensorDeclaration(AST):
                     if mode % 2 == 0:
                         mode = (mode // 2,) * 2
             except TypeError:
-                raise ValueError('mode must be a nonnegative integer or a 2-tuple')
-
-        rank = fractions.Fraction(rank)
-        if rank < 0 or rank.denominator not in (1, 2):
-            raise ValueError('rank must be a nonnegative (half-)integer')
+                raise TypeError('mode must be a nonnegative integer or a 2-tuple')
 
         if scheme is not None:
             if len(scheme) != 2:
@@ -313,7 +309,7 @@ class TensorDeclaration(AST):
         self.name = name
         self.mode = mode
         self.totalmode = sum(mode)
-        self.rank = rank
+        self.scalar = scalar
         self.diagonal = diagonal
         self.scheme = scheme
         self.attrs = kwargs
@@ -322,7 +318,7 @@ class TensorDeclaration(AST):
         return self.__repr__()
 
     def __repr__(self):
-        return 'Tensor {0.name} {{mode={0.mode}, rank={0.rank}, diagonal={0.diagonal}, scheme={0.scheme} }}'.format(self)
+        return 'Tensor {0.name} {{mode={0.mode}, scalar={0.scalar}, diagonal={0.diagonal}, scheme={0.scheme} }}'.format(self)
 
     @staticmethod
     def _check_scheme(scheme, start, num):
