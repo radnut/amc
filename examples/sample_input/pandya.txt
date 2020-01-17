@@ -1,0 +1,36 @@
+
+# Scalar tensor
+declare T {
+    mode=4,
+    scalar=true,
+}
+
+# Nonscalar tensor
+declare V {
+    mode=4,
+    scalar=false,
+}
+
+# Pandya transform of T
+declare Tp {
+    mode=4,
+    scalar=true,
+    scheme=((1,-4),(3,-2)),
+    latex="\tilde{T}",
+}
+
+# Pandya transform of V
+declare Vp {
+    mode=4,
+    scalar=false,
+    scheme=((1,-4),(3,-2)),
+    latex="\tilde{V}",
+}
+
+# Scalar equations
+Tp_abcd = - T_abcd;
+T_abcd = - Tp_abcd;
+
+# Nonscalar equations
+Vp_abcd = - V_abcd;
+V_abcd = - Vp_abcd;
