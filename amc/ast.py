@@ -837,7 +837,7 @@ class HatPhaseFactor(AST):
         pass
 
     def __new__(cls, index, hatpower=0, jphase=0, mphase=0, sign=1):
-        if index.type == 'hint':
+        if index.type == 'int':
             jphase %= 2
             mphase %= 2
         else:
