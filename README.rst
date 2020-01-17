@@ -33,6 +33,7 @@ For example, second-order many-body perturbation theory can be reduced in this
 way:
 
 .. code-block:: none
+    :caption: mbpt.amc
 
     declare E2 {
         mode=0,
@@ -52,6 +53,12 @@ Then run the ``amc`` program on the input
 .. code-block:: bash
 
     amc -o mbpt.tex mbpt.amc
+
+The result is
+
+.. math::
+
+    E^{(2)}_{0} = \frac{1}{4} \sum_{a b i j {J}_{0}} \hat{J}_{0}^{2} H_{a b i j}^{{J}_{0} {J}_{0} 0} H_{i j a b}^{{J}_{0} {J}_{0} 0}
 
 See the `User's Guide <docs/ug.rst>`_ for details.
 
