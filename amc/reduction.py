@@ -240,25 +240,27 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
     rankindices = [aux[-1] for v, aux in jvariables]
     rankidx_lhs = aux_lhs[-1]
 
-    if len(rankindices) == 1:
-        # If there is only one tensor on the right-hand side, its rank has to be identical to the
-        # left-hand side rank.
-        clebsches.append(yutsis.ClebschGordan([rankindices[0], zero, rankidx_lhs], [+1, +1, +1]))
-    else:
+    # If there is only one tensor on the right-hand side, its rank has to be identical to the
+    # left-hand side rank.
+    if len(rankindices) > 1:
         # If there is more than one tensor, we couple them left-to-right to intermediate angular
         # momenta. The final angular momentum is the one on the left-hand side.
         for k, i in enumerate(rankindices):
             if k == 0:
                 left_idx = i
                 continue
-            if k + 1 == len(rankindices):
-                new_idx = rankidx_lhs
+
+            if not (left_idx.zero and i.zero):
+                if k + 1 == len(rankindices):
+                    new_idx = rankidx_lhs
+                else:
+                    new_idx = yutsis.Idx(yutsis.Idx.coupled_type(left_idx, i),
+                                        is_particle=False, external=False)
+                    aux_idx.append(new_idx)
+                clebsches.append(yutsis.ClebschGordan([left_idx, i, new_idx], [+1, +1, +1]))
+                left_idx = new_idx
             else:
-                new_idx = yutsis.Idx(yutsis.Idx.coupled_type(left_idx, i),
-                                     is_particle=False, external=False)
-                aux_idx.append(new_idx)
-            clebsches.append(yutsis.ClebschGordan([left_idx, i, new_idx], [+1, +1, +1]))
-            left_idx = new_idx
+                left_idx = zero
 
     Y = yutsis.YutsisReduction(list(idx.values()) + aux_idx, clebsches,
                                     zero)
