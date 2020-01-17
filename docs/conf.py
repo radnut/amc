@@ -14,15 +14,17 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
+import amc
+
 
 # -- Project information -----------------------------------------------------
 
 project = 'AMC'
-copyright = '2020, Julien Ripoche, Alexander Tichai, Roland Wirth'
-author = 'Julien Ripoche, Alexander Tichai, Roland Wirth'
+copyright = '2020, ' + amc.__author__
+author = amc.__author__
 
 # The full version, including alpha/beta/rc tags
-release = '0.1'
+release = amc.__version__
 
 
 # -- General configuration ---------------------------------------------------
