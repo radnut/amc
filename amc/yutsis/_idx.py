@@ -6,7 +6,7 @@ class Idx:
 
     default_name_index = {'hint': 0, 'int': 0}
 
-    def __init__(self, type, name=None, *, is_particle, zero=False, external=False):
+    def __init__(self, type, name=None, *, is_particle, zero=False, external=False, rank=False):
         """Constructor method"""
 
         if type not in ('int', 'hint'):
@@ -16,6 +16,7 @@ class Idx:
         self.type = type
         self.zero = zero
         self.external = external
+        self.rank = rank
 
         self.name = name or Idx.make_name(type)
 

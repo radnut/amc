@@ -5,7 +5,12 @@ from __future__ import (absolute_import, print_function, division)
 import fractions
 import re
 
-from ..ast import ASTTraverser, Add
+from ..ast import ASTTraverser, Add, HatPhaseFactor
+
+_TRANSLATION_TABLE = str.maketrans({
+    'λ': r'{\lambda}',
+    'Λ': r'{\Lambda}',
+    })
 
 
 class _LatexPrinter(ASTTraverser):
@@ -24,30 +29,63 @@ class _LatexPrinter(ASTTraverser):
 
     def n_reducedvariable_exit(self, v, _):
         if v.subscripts:
-            return '\* {}_{{{}}}^{{{}}}'.format(v.tensor.attrs.get('latex', v.tensor.name), ' '.join(map(self._latexify_index, v.subscripts)), ' '.join(map(self._latexify_index, v.labels)))
+            return '{}_{{{}}}^{{{}}}'.format(v.tensor.attrs.get('latex', v.tensor.name), ' '.join(map(self._latexify_index, v.subscripts)), ' '.join(map(self._latexify_index, v.labels)))
         else:
             # Special case for mode-0 tensors.
-            return '\* {}'.format(v.tensor.attrs.get('latex', v.tensor.name))
+            return '{}'.format(v.tensor.attrs.get('latex', v.tensor.name))
 
     def n_sum_exit(self, s, result):
         if isinstance(s[0], Add):
-            fmt = r'\*\sum_{{{}}}\left({}\right)'
+            fmt = r'\sum_{{{}}} \* \left({}\right)'
         else:
-            fmt = r'\*\sum_{{{}}} {}'
+            fmt = r'\sum_{{{}}} \* {}'
         return fmt.format(' '.join(sorted(map(self._latexify_index, s.subscripts))), result[0])
 
-    def n_mul_exit(self, m, results):
+    def n_mul(self, m, **params):
+        return dict(in_mul=True)
+
+    def n_mul_exit(self, m, results, in_mul):
         strings = []
         pre = ''
+
+        hatphases = []
+        hatphase_begin = None
+
         for i, r in enumerate(results):
             if m[i] == -1:
                 pre = '-'
                 continue
             if isinstance(m[i], Add):
-                strings.append('\*({})'.format(r))
-            else:
+                strings.append('({})'.format(r))
+            elif isinstance(m[i], HatPhaseFactor):
+                if hatphase_begin is None:
+                    hatphase_begin = i
+                hatphases.append(m[i])
+            elif r is not None:
                 strings.append(r)
-        return pre + ' '.join(strings)
+
+        # "Transpose" the hat-phase factors to get a bunch of hat factors and
+        # a phase factor for all indices, instead of one-by-one.
+        if hatphases:
+            phase_exponents = []
+            hatpowers = []
+
+            for hp in hatphases:
+                phase_exponent, hatpower = self._prepare_hatphase(hp, first=(not phase_exponents))
+                if phase_exponent:
+                    phase_exponents.append(phase_exponent)
+                if hatpower:
+                    hatpowers.append(hatpower)
+
+            # Insert hatpowers first, then phases in the same positions to
+            # order the phase factor before the hats.
+            if hatpowers:
+                strings[hatphase_begin:hatphase_begin] = hatpowers
+            if phase_exponents:
+                print(r'(-1)^{{{}}}'.format(''.join(phase_exponents)))
+                strings[hatphase_begin:hatphase_begin] = (r'(-1)^{{{}}}'.format(''.join(phase_exponents)),)
+
+        return pre + r' \* '.join(strings)
 
     def n_add_exit(self, a, results):
         strings = []
@@ -63,15 +101,15 @@ class _LatexPrinter(ASTTraverser):
 
     def n_threej_exit(self, tj, _):
         if self.print_threejs:
-            return r'\* \threej{{{}}}{{{}}}{{{}}}'.format(*map(self._latexify_index_j, tj.indices))
+            return r'\threej{{{}}}{{{}}}{{{}}}'.format(*map(self._latexify_index_j, tj.indices))
         else:
             return ''
 
     def n_sixj_exit(self, sj, _):
-        return r'\* \sixj{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}'.format(*map(self._latexify_index_j, sj.indices))
+        return r'\sixj{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}'.format(*map(self._latexify_index_j, sj.indices))
 
     def n_ninej_exit(self, nj, _):
-        return r'\* \ninej{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}'.format(*map(self._latexify_index_j, nj.indices))
+        return r'\ninej{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}'.format(*map(self._latexify_index_j, nj.indices))
 
     def n_deltaj_exit(self, dj, _):
         a = self._latexify_index_j(dj.a)
@@ -79,38 +117,55 @@ class _LatexPrinter(ASTTraverser):
 
         return r'\delta_{{{},{}}}'.format(a, b)
 
-    def n_hatphasefactor_exit(self, hp, _):
-        phase_exponent = ''
+    def n_hatphasefactor(self, hp, **params):
+        return dict(in_mul=params.pop('in_mul', False))
+
+    def n_hatphasefactor_exit(self, hp, _, in_mul):
+        if in_mul:
+            return None
 
         ret = []
+        phase_exponent, hatpower = self._prepare_hatphase(hp)
+
+        if phase_exponent:
+            ret.append(r'(-1)^{{{}}}'.format(phase_exponent))
+
+        if hatpower:
+            ret.append(hatpower)
+
+        return ' \* '.join(ret)
+
+    def _prepare_hatphase(self, hp, first=True):
+        phase_exponent = None
+        hatpower = None
 
         if hp.jphase:
-            if abs(hp.jphase) == 1:
-                jphase = '' if hp.jphase > 0 else '-'
+            jphase = '{}{}'.format(abs(hp.jphase) if abs(hp.jphase) != 1 else '', self._latexify_index_j(hp.index))
+
+            if not first:
+                sign = '+' if hp.jphase > 0 else '-'
             else:
-                jphase = str(hp.jphase)
-            phase_exponent = '{}{}'.format(jphase, self._latexify_index_j(hp.index))
+                sign = '' if hp.jphase > 0 else '-'
+
+            phase_exponent = sign + jphase
 
         if hp.mphase:
             mphase = '{}m_{{{}}}'.format(abs(hp.mphase) if abs(hp.mphase) != 1 else '', self._latexify_index_j(hp.index))
 
-            if phase_exponent:
+            if phase_exponent is not None or not first:
                 sign = '+' if hp.mphase > 0 else '-'
             else:
                 sign = '' if hp.mphase > 0 else '-'
 
             phase_exponent += sign + mphase
 
-        if phase_exponent:
-            ret.append(r'\*(-1)^{{{}}}'.format(phase_exponent))
-
         if hp.hatpower:
             if hp.hatpower != 1:
-                ret.append(r'\*\hatfact{{{}^{{{}}}}}'.format(self._latexify_index_j(hp.index), hp.hatpower))
+                hatpower = r'\hatfact{{{}^{{{}}}}}'.format(self._latexify_index_j(hp.index), hp.hatpower)
             else:
-                ret.append(r'\*\hatfact{{{}}}'.format(self._latexify_index_j(hp.index)))
+                hatpower = r'\hatfact{{{}}}'.format(self._latexify_index_j(hp.index))
 
-        return ' '.join(ret)
+        return phase_exponent, hatpower
 
     def default_exit(self, n, _):
         if isinstance(n, fractions.Fraction):
@@ -127,7 +182,8 @@ class _LatexPrinter(ASTTraverser):
             return r'{{j}}_{{{}}}'.format(self._latexify_index(i))
 
     def _latexify_index(self, s):
-        return re.sub(r'^([a-zA-Z])(\d+)$', r'{\1}_{\2}', str(s))
+        ltx = re.sub(r'^(\w)(\d+)$', r'{\1}_{\2}', str(s))
+        return ltx.translate(_TRANSLATION_TABLE)
 
 
 def convert_expression(expr, print_threejs=False):

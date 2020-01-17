@@ -64,7 +64,7 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
     else:
         terms = [rhs]
 
-    index_number = {'hint': 0, 'int': 0}
+    index_number = {'hint': 0, 'int': 0, 'rank': 0}
     zero = ast.Index('0', 'int', 'am')
     aux_ast = generate_auxiliary_ast_indices(equation.lhs, index_number, zero)
 
@@ -118,7 +118,7 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
         Term to reduce. Should be a single sum over a product of tensor
         variables.
 
-    index_number : `dict` {'hint': `int`, 'int': `int`}
+    index_number : `dict` {'hint': `int`, 'int': `int`, 'rank': `int`}
         Dictionary holding the counters for automatically generating auxiliary
         indices. Values should be large enough so that new generated names do
         not alias left-hand auxiliary indices.
@@ -416,7 +416,8 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
     rankidx = yutsis.Idx(yutsis.Idx.coupled_type(s0[0], s1[0]),
                          is_particle=False,
                          external=lhs,
-                         zero=v.tensor.scalar)
+                         zero=v.tensor.scalar,
+                         rank=True)
 
     if not v.tensor.scalar or wet_scalar:
         if convention == 'edmonds':
@@ -519,6 +520,12 @@ def handle_deltas(Y):
     return idxmap
 
 
+_TYPE_MAP = {
+    'int': 'J{}',
+    'hint': 'j{}',
+    'rank': 'λ{}',
+    }
+
 def generate_auxiliary_ast_indices(v, index_number, zero):
     """Generate auxiliary AST indices arising from the reduction of the given variable.
 
@@ -527,7 +534,7 @@ def generate_auxiliary_ast_indices(v, index_number, zero):
     v : `ast.Variable`
         Tensor variable.
 
-    index_number : `dict` {'hint': `int`, 'int': `int`}
+    index_number : `dict` {'hint': `int`, 'int': `int`, 'rank': `int`}
         Dictionary holding the counters for automatically generating auxiliary
         indices. Values should be large enough so that new generated names do
         not alias already existing ones.
@@ -554,7 +561,7 @@ def generate_auxiliary_ast_indices(v, index_number, zero):
 
         # Create a new dummy index for the coupled angular momentum.
         cptype = ast.Index.coupled_type(s0, s1)
-        name = ('J{}' if cptype == 'int' else 'j{}').format(index_number[cptype])
+        name = _TYPE_MAP[cptype].format(index_number[cptype])
         index_number[cptype] += 1
 
         cpidx = ast.Index(name=name, type=cptype, class_='am')
@@ -577,8 +584,8 @@ def generate_auxiliary_ast_indices(v, index_number, zero):
         aux_ast.append(zero)
     else:
         cptype = ast.Index.coupled_type(s0, s1)
-        name = ('J{}' if cptype == 'int' else 'j{}').format(index_number[cptype])
-        index_number[cptype] += 1
+        name = _TYPE_MAP['rank'].format(index_number['rank'])
+        index_number['rank'] += 1
         rankidx = ast.Index(name=name, type=cptype, class_='am')
         aux_ast.append(rankidx)
 
@@ -600,7 +607,7 @@ def yutsis_auxiliary_indices_to_ast(aux_idx, subscript_map, index_number, zero):
         Mapping from Yutsis indices to known AST indices, e.g., external indices.
         New indices are added to this mapping.
 
-    index_number : `dict` {'hint': `int`, 'int': `int`}
+    index_number : `dict` {'hint': `int`, 'int': `int`, 'rank': `int`}
         Dictionary holding the counters for automatically generating auxiliary
         indices. Values should be large enough so that new generated names do
         not alias already existing ones.
@@ -612,8 +619,12 @@ def yutsis_auxiliary_indices_to_ast(aux_idx, subscript_map, index_number, zero):
         if idx not in subscript_map:
             if idx.constrained_to is None:
                 if not idx.zero:
-                    name = ('J{}' if idx.type == 'int' else 'j{}').format(index_number[idx.type])
-                    index_number[idx.type] += 1
+                    if idx.rank:
+                        name = _TYPE_MAP['rank'].format(index_number['rank'])
+                        index_number['rank'] += 1
+                    else:
+                        name = _TYPE_MAP[idx.type].format(index_number[idx.type])
+                        index_number[idx.type] += 1
                     subscript_map[idx] = ast.Index(name, idx.type, 'am')
                 else:
                     subscript_map[idx] = zero
@@ -622,8 +633,12 @@ def yutsis_auxiliary_indices_to_ast(aux_idx, subscript_map, index_number, zero):
 
                 if sidx not in subscript_map:
                     if not idx.zero:
-                        name = ('J{}' if sidx.type == 'int' else 'j{}').format(index_number[sidx.type])
-                        index_number[sidx.type] += 1
+                        if sidx.rank:
+                            name = _TYPE_MAP['rank'].format(index_number['rank'])
+                            index_number['rank'] += 1
+                        else:
+                            name = _TYPE_MAP[sidx.type].format(index_number[sidx.type])
+                            index_number[sidx.type] += 1
                         subscript_map[sidx] = ast.Index(name, sidx.type, 'am')
                     else:
                         subscript_map[sidx] = zero
