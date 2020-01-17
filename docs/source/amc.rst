@@ -7,4 +7,3 @@ API Documentation
    amc.output
    amc.parser
    amc.reduction
-   amc.yutsis
