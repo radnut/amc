@@ -203,7 +203,7 @@ class ASTTraverser(object):
                 method = getattr(self, 'n_' + n.type, default_pre)
             else:
                 method = default_pre
-            method(n, **k)
+            return method(n, **k)
 
         def _post(n, r, **k):
             if hasattr(n, 'type'):
