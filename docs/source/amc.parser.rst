@@ -1,5 +1,5 @@
-amc.parser package
-==================
+amc.parser module
+=================
 
 Module contents
 ---------------
