@@ -240,8 +240,13 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
     rankindices = [aux[-1] for v, aux in jvariables]
     rankidx_lhs = aux_lhs[-1]
 
-    # If there is only one tensor on the right-hand side, its rank has to be identical to the
-    # left-hand side rank.
+    if len(rankindices) == 1:
+        # If there is only one tensor on the right-hand side, its rank has to be identical to the
+        # left-hand side rank.
+
+        if not rankindices[0].zero:
+            clebsches.append(yutsis.ClebschGordan([rankindices[0], zero, rankidx_lhs], [+1, +1, +1]))
+
     if len(rankindices) > 1:
         # If there is more than one tensor, we couple them left-to-right to intermediate angular
         # momenta. The final angular momentum is the one on the left-hand side.
@@ -269,15 +274,15 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
         # Full reduction failed. Until we have permutations, we can only fail here.
         raise ReductionError()
 
+    if collect_ninejs:
+        Y.collect_ninejs()
+
     for sixj in Y.sixjs:
         sixj.canonicalize()
         for i in sixj.indices:
             if i not in internal_idx and i not in external_idx:
                 aux_rhs.append(i)
                 aux_idx.append(i)
-
-    if collect_ninejs:
-        Y.collect_ninejs()
 
     handle_deltas(Y)
 
@@ -383,7 +388,6 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
         if s1[1] < 0:
             s1[0].jphase += 1
             s1[0].mphase -= 1
-
 
         clebsches.append(cg)
         aux.append(cpidx)
