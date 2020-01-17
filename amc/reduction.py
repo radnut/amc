@@ -375,6 +375,16 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
         cg = yutsis.ClebschGordan([s0[0], s1[0], cpidx],
                                        [s0[1], s1[1], 1])
 
+        # If the time-reversed state is coupled, we have to add a (-1)^(j-m)
+        # phase.
+        if s0[1] < 0:
+            s0[0].jphase += 1
+            s0[0].mphase -= 1
+        if s1[1] < 0:
+            s1[0].jphase += 1
+            s1[0].mphase -= 1
+
+
         clebsches.append(cg)
         aux.append(cpidx)
         return cpidx
