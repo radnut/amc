@@ -216,7 +216,7 @@ class Lexer:
 
     def t_STRING(self, t):
         r'" ([^"\\\n]|\\.)* "'
-        t.value = re.sub(r'\\(",\n)', r'\1', t.value[1:-1])
+        t.value = re.sub(r'\\(["\n\\])', r'\1', t.value[1:-1])
         return t
 
     def t_error(self, t):
