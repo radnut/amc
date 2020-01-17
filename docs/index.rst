@@ -10,8 +10,14 @@ Welcome to AMC's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   README <readme>
    ug
    source/amc
+
+.. toctree::
+   :hidden:
+
+   source/modules
 
 
 
