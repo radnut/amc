@@ -24,7 +24,7 @@ Backslashes before these characters, as well as before the backslash itself, are
 Comments are introduced by the pound sign, ``#``, and last to the end of the line.
 
 Tensor Declarations
--------------------
+^^^^^^^^^^^^^^^^^^^
 A tensor declaration has the following form:
 
 .. code-block:: none
@@ -74,13 +74,112 @@ scheme
     Examples:
 
     - ``(((1,2),3),((4,5),6))`` is the default coupling scheme for a mode-6 tensor.
-    - ``((1,-4),(3,-2))`` is the coupling scheme of a cross-coupled mode-4 tensor, similar to a Pandya transformation, where the first creator is coupled to the time-reversed second annihilator, and the first annihilator is coupled to the second creator.
+    - ``((1,-4),(3,-2))`` is the coupling scheme of a cross-coupled mode-4 tensor, similar to a Pandya transformation, where the first creator is coupled with the time-reversed second annihilator index, and the first annihilator is coupled with the time-reversed second creator index.
 latex
     Optional property.
     Specifies the LaTeX code to use for this tensor.
     May only include sub- or superscripts if the tensor is mode-0, i.e., an ordinary number.
 
 
+Equations
+^^^^^^^^^
+Equations are written in the usual way:
+
+.. code-block:: none
+
+    T2_abcd = - 1/2 * sum_ij(U2_abij * V2_ijcd);
+
+Equations may span multiple lines and must be terminated by a semicolon ``;``.
+The left-hand side of the equation must be a single tensor variable, and defines the properties of the result, like the desired coupling scheme, by naming the result tensor, as well as the external indices for the right-hand side.
+The right-hand side is a general expression involving tensor variables, made up of additions, substractions, and multiplications (``+``, ``-``, ``*``).
+Division is not supported, except in the form of fractions.
+
+Aside from numbers, the building blocks for expressions are:
+
+_`Subscripts`
+    Subscripts appear on `sum operators`_ and `tensor variables`_.
+    They may be specified simply as an underscore followed by a set of single-character indices, ``_abcd``, or as an underscore followed by a braced, space-separated list of multi-character indices, such as ``_{k1 k2 k3}``.
+    Index names may consist of letters and digits.
+    It is not recommended to have numbers as indices, because they will produce the same angular-momentum variables as those produced by indices generated during the reduction.
+_`Tensor variables`
+    Tensor variables are instances of a known tensor. They are constructed by attaching a subscript to the name of a known tensor, like ``T2_abcd``. The number of subscripts provided has to be the number of subscripts expected by the tensor.
+_`Sum operators`
+    Sum operators indicate a summation over a set of indices.
+    They are introduced by the keyword ``sum`` followed by a subscript indicating the affected indices.
+    The summed expression follows in parentheses:
+
+    .. code-block:: none
+
+        sum_abij(U_abij*U_ijab)
+
+    The sum operator marks the affected indices as internal.
+    The right-hand side of an equation must depend on all of the external indices that the left-hand side provides.
+_`Permutation operators`
+    Permutation operators are a tool to simplify the entering of equations into the program.
+    Often, expressions must be explicitly antisymmetrized in order to make the result tensor antisymmetric.
+    Permutation operators assist with this effort by generating the antisymmetrizing terms automatically.
+
+    In its basic form, a permutation operator ``P(ij)`` transposes two indices in the part of the product to the right of it.
+    With this form, one can build simple antisymmetrizers like ``(1-P(ij))*A_i*B_j``, generating ``A_i*B_j - A_j*B_i``.
+
+    The advanced form of the operator accepts multiple sets of indices separated by forward slashes, ``P(ij/k)``.
+    These expand to all distinct permutations of indices between the different sets:
+
+    .. code-block:: none
+
+        P(ij/k) = 1 - P(ik) - P(jk),
+        P(i/j)  = 1 - P(ij).
+
+    The operator ``P(i/j/k)`` expands to the six permutations of the set :math:`\{i,j,k\}`.
+    Index sets can also be given as brace-delimited lists, as in ``P({k1}/{k2})``.
+
 The ``amc`` Command
 -------------------
+The ``amc`` command is the command-line frontend of the package.
+It parses the input file, performs the reduction, and writes the reduced equations to a LaTeX file.
 
+Aside from the required input file, ``amc`` accepts the following optional arguments:
+
+  -h, --help            Show a help message and exit.
+  -o OUTPUT, --output OUTPUT
+                        Output file
+  --collect-ninejs      Build 9j-coefficients from products of 6j-coefficients.
+  --print-threejs       Print 3j-coefficients.
+  --wet-convention      ``{wigner,sakurai}``.
+                        Convention used for Wigner-Eckart reduced matrix elements.
+  --wet-scalar          Reduce scalar matrix elements.
+                        Default is to use the unreduced form for scalar tensors.
+  -V, --version         show program's version number and exit
+  -v, --verbose         Increase verbosity
+
+By default, ``amc`` creates a ``.tex`` file with the same basename and in the same directory as the input file.
+
+The ``collect-ninejs`` option activates a post-processing step during which products of three 6j symbols are coalesced into a 9j symbol.
+This often makes the expressions shorter but can hinder the identification of intermediates, e.g., when one of the 6j symbols only depends on the quantum numbers of one tensor.
+
+The ``print-threejs`` option activates the output of triangular inequality constraints (3j symbols) that were generated during the reduction.
+Mostly, these constraints reproduce constraints that can be inferred from the tensors themselves, so the do not add information.
+Redundant constraints that are implicit in 6j or 9j symbols are never printed.
+
+The ``wet-convention`` switches between different definitions of the Wigner-Eckart reduced matrix element of a tensor, and thus between definitions of the Wigner-Eckart theorem.
+Currently, ``amc`` supports two conventions:
+
+wigner
+
+    .. math::
+
+        \langle j'm'|T^\lambda_\mu|jm\rangle = (-1)^{2\lambda} \langle jm,\lambda\mu|j'm'\rangle \frac{(j'\|T^\lambda\|j)}{\sqrt{2j'+1}}
+
+    The wigner convention is also used, e.g., by Edmonds, Racah, and Varshalovich.
+
+sakurai
+
+    .. math::
+
+        \langle j'm'|T^\lambda_\mu|jm\rangle = \langle jm,\lambda\mu|j'm'\rangle \frac{(j'\|T^\lambda\|j)}{\sqrt{2j+1}}
+
+The ``edmonds`` convention is chosen by default.
+
+The ``wet-scalar`` flag changes the handling of scalar tensors.
+By default, the code assumes that matrix elements of scalar tensors are unreduced.
+If the flag is given, scalar operators are treated the same as nonscalar ones, and reduced matrix elements are assumed on input and output.
