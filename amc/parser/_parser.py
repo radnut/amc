@@ -175,13 +175,13 @@ class Lexer:
         t.lexer.lineno += len(t.value)
 
     def t_PERM(self, t):
-        r'P\((?:[a-z0-9]+|\{[a-z0-9 ]+\})(?:/(?:[a-z0-9]+|\{[a-z0-9 ]+\}))*\)'
+        r'P\((?:[\w]+|\{[\w ]+\})(?:/(?:[\w]+|\{[\w ]+\}))*\)'
 
         sets = []
         val = t.value[2:-1]
 
         while val:
-            match = re.match(r'([a-z0-9]+|\{[a-z0-9 ]+\})', val)
+            match = re.match(r'([\w]+|\{[\w ]+\})', val)
             if match.group(1).startswith('{'):
                 sets.append(set(match.group(1).split()))
             else:
@@ -202,8 +202,8 @@ class Lexer:
         return t
 
     def t_SUBSCRIPT(self, t):
-        r'_[a-z0-9]+|_\{[a-z0-9_ ]*\}'
-        if re.match(r'_[a-z0-9]+', t.value):
+        r'_[\w]+|_\{[\w ]*\}'
+        if re.match(r'_[\w]+', t.value):
             t.value = tuple(iter(t.value[1:]))
         else:
             t.value = t.value[2:-1].split()
