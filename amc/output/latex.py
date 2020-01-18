@@ -59,9 +59,9 @@ class _LatexPrinter(ASTTraverser):
                 strings.append('({})'.format(r))
             elif isinstance(m[i], HatPhaseFactor):
                 if hatphase_begin is None:
-                    hatphase_begin = i
+                    hatphase_begin = len(strings)
                 hatphases.append(m[i])
-            elif r is not None:
+            elif r is not None and r != '':
                 strings.append(r)
 
         # "Transpose" the hat-phase factors to get a bunch of hat factors and
@@ -82,7 +82,6 @@ class _LatexPrinter(ASTTraverser):
             if hatpowers:
                 strings[hatphase_begin:hatphase_begin] = hatpowers
             if phase_exponents:
-                print(r'(-1)^{{{}}}'.format(''.join(phase_exponents)))
                 strings[hatphase_begin:hatphase_begin] = (r'(-1)^{{{}}}'.format(''.join(phase_exponents)),)
 
         return pre + r' \* '.join(strings)
