@@ -165,14 +165,12 @@ The ``wet-convention`` switches between different definitions of the Wigner-Ecka
 Currently, ``amc`` supports two conventions:
 
 wigner
-
     .. math::
 
         \langle j'm'|T^\lambda_\mu|jm\rangle = (-1)^{2\lambda} \langle jm,\lambda\mu|j'm'\rangle \frac{(j'\|T^\lambda\|j)}{\sqrt{2j'+1}}
 
     The wigner convention is also used, e.g., by Edmonds, Racah, and Varshalovich.
 sakurai
-
     .. math::
 
         \langle j'm'|T^\lambda_\mu|jm\rangle = \langle jm,\lambda\mu|j'm'\rangle \frac{(j'\|T^\lambda\|j)}{\sqrt{2j+1}}
