@@ -1,6 +1,7 @@
 *.aux
 *.log
 *.pdf
+*.synctex.gz
 *.py[co]
 
 /amc.egg-info
