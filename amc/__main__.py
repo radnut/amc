@@ -31,7 +31,7 @@ def parse_command_line():
 #                       help="Permute tensor indices to find simpler formulas. `smart' tries only the ones that are probable to succeed.")
     parser.add_argument('--collect-ninejs', action='store_true', help='Build 9j-coefficients from products of 6j-coefficients.')
     parser.add_argument('--print-threejs', action='store_true', help='Print 3j-coefficients.')
-    parser.add_argument('--wet-convention', choices=['edmonds', 'sakurai'], default='edmonds',
+    parser.add_argument('--wet-convention', choices=['wigner', 'sakurai'], default='wigner',
                         help='Convention used for Wigner-Eckart reduced matrix elements.')
     parser.add_argument('--wet-scalar', action='store_true',
                         help='Reduce scalar matrix elements. Default is to use the unreduced form for scalar tensors.')

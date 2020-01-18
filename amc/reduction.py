@@ -12,10 +12,10 @@ class ReductionError(Exception):
 
 
 def reduce_equation(equation, *, permute=None, collect_ninejs=False,
-                    convention='edmonds', wet_scalar=False,
+                    convention='wigner', wet_scalar=False,
                     monitor=lambda t, nt, p, np: None):
     """reduce_equation(equation, *, permute=None, collect_ninejs=False,
-                    convention='edmonds', wet_scalar=False,
+                    convention='wigner', wet_scalar=False,
                     monitor=lambda t, nt, p, np: None)
 
     Reduce the given equation to angular-momentum coupled form.
@@ -35,7 +35,7 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
     collect_ninejs : `bool`
         Try to construct 9j-symbols from sums over products of 6j-symbols.
 
-    convention : {'edmonds', 'sakurai'}
+    convention : {'wigner', 'sakurai'}
         Use the given convention for Wigner-Eckart reduced matrix elements.
 
     wet_scalar : `bool`
@@ -98,10 +98,10 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
 
 
 def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
-                permute=None, collect_ninejs=False, convention='edmonds',
+                permute=None, collect_ninejs=False, convention='wigner',
                 wet_scalar=False, monitor=lambda p, np: None):
     """reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
-                   permute=None, collect_ninejs=False, convention='edmonds',
+                   permute=None, collect_ninejs=False, convention='wigner',
                    wet_scalar=False, monitor=lambda p, np: None)
 
     Reduce a single term into angular-momentum coupled form.
@@ -136,7 +136,7 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
     collect_ninejs : `bool`
         Try to construct 9j-symbols from sums over products of 6j-symbols.
 
-    convention : {'edmonds', 'sakurai'}
+    convention : {'wigner', 'sakurai'}
         Use the given convention for Wigner-Eckart reduced matrix elements.
 
     wet_scalar : `bool`
@@ -321,7 +321,7 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
     return new_rhs
 
 
-def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
+def variable_to_clebsches(v, idx, convention='wigner', wet_scalar=False,
                           lhs=False):
     """Generate a Clebsch-Gordan network according to the coupling scheme of
     the given tensor variable.
@@ -334,7 +334,7 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
     idx : `dict`(`ast.Index`: `yutsis.Idx`)
         Mapping from AST indices to Yutsis graph indices
 
-    convention : {'edmonds', 'sakurai'}
+    convention : {'wigner', 'sakurai'}
         Use the given convention for Wigner-Eckart reduced matrix elements.
 
     wet_scalar : `bool`
@@ -420,7 +420,7 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
                          rank=True)
 
     if not v.tensor.scalar or wet_scalar:
-        if convention == 'edmonds':
+        if convention == 'wigner':
             rankidx.jphase += 2
             s0[0].jhat -= 1
         elif convention == 'sakurai':
@@ -442,9 +442,9 @@ def variable_to_clebsches(v, idx, convention='edmonds', wet_scalar=False,
 
 
 def _check_convention(convention):
-    if convention not in ('edmonds', 'sakurai'):
+    if convention not in ('wigner', 'sakurai'):
         raise ValueError('Unknown WET convention: {}.'
-                         ' Must be edmonds or sakurai.'.format(convention))
+                         ' Must be wigner or sakurai.'.format(convention))
 
 
 def handle_deltas(Y):
