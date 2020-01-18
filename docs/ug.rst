@@ -171,14 +171,13 @@ wigner
         \langle j'm'|T^\lambda_\mu|jm\rangle = (-1)^{2\lambda} \langle jm,\lambda\mu|j'm'\rangle \frac{(j'\|T^\lambda\|j)}{\sqrt{2j'+1}}
 
     The wigner convention is also used, e.g., by Edmonds, Racah, and Varshalovich.
-
 sakurai
 
     .. math::
 
         \langle j'm'|T^\lambda_\mu|jm\rangle = \langle jm,\lambda\mu|j'm'\rangle \frac{(j'\|T^\lambda\|j)}{\sqrt{2j+1}}
 
-The ``edmonds`` convention is chosen by default.
+The ``wigner`` convention is chosen by default.
 
 The ``wet-scalar`` flag changes the handling of scalar tensors.
 By default, the code assumes that matrix elements of scalar tensors are unreduced.
