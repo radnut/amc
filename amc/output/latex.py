@@ -1,4 +1,4 @@
-"""LaTeX output for reducedand unreduced equations."""
+"""LaTeX output for reduced and unreduced equations."""
 
 from __future__ import (absolute_import, print_function, division)
 
@@ -8,8 +8,58 @@ import re
 from ..ast import ASTTraverser, Add, HatPhaseFactor
 
 _TRANSLATION_TABLE = str.maketrans({
+    'α': r'{\alpha}',
+    '\u0391': r'A',
+    'β': r'{\beta}',
+    '\u0392': r'B',
+    'γ': r'{\gamma}',
+    'Γ': r'{\Gamma}',
+    'δ': r'{\delta}',
+    'Δ': r'{\Delta}',
+    'ε': r'{\epsilon}',
+    '\u0395': r'E',
+    'ζ': r'{\zeta}',
+    '\u0396': r'Z',
+    'η': r'{\eta}',
+    '\u0397': r'H',
+    'ϑ': r'{\vartheta}',
+    'θ': r'{\theta}',
+    'Θ': r'{\Theta}',
+    'ι': r'{\iota}',
+    '\u0399': r'I',
+    'κ': r'{\kappa}',
+    '\u039A': r'K',
     'λ': r'{\lambda}',
     'Λ': r'{\Lambda}',
+    'μ': r'{\mu}',
+    '\u039C': r'M',
+    'ν': r'{\nu}',
+    '\u039D': r'N',
+    'ξ': r'{\xi}',
+    'Ξ': r'{\Xi}',
+    '\u03BF': r'o',
+    '\u039F': r'O',
+    'ϖ': r'{\varpi}',
+    'π': r'{\pi}',
+    'Π': r'{\Pi}',
+    'ρ': r'{\rho}',
+    '\u03A1': r'P',
+    '\u03C2': r'{\varsigma}',
+    'σ': r'{\sigma}',
+    'Σ': r'{\Sigma}',
+    'τ': r'{\tau}',
+    '\u03A4': r'T',
+    'υ': r'{\upsilon}',
+    'Υ': r'{\Upsilon}',
+    'φ': r'{\varphi}',
+    'ϕ': r'{\phi}',
+    'Φ': r'{\Phi}',
+    'χ': r'{\chi}',
+    '\u03A7': r'X',
+    'ψ': r'{\psi}',
+    'Ψ': r'{\Psi}',
+    'ω': r'{\omega}',
+    'Ω': r'{\Omega}',
     })
 
 
