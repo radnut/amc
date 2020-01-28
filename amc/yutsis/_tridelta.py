@@ -1,7 +1,7 @@
 from __future__ import (division, absolute_import, print_function)
 
 
-class ThreeJ:
+class TriangularDelta:
     """3j-symbol class"""
 
     def __init__(self, idx1, idx2, idx3):

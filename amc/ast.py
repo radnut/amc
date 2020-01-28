@@ -472,7 +472,6 @@ class Index(object):
         Index object that this index is constrained to via a delta constraint.
     """
 
-
     def __init__(self, name, type, class_):
         if type not in ('int', 'hint'):
             raise ValueError("Type must be 'int' or 'hint'")
@@ -650,12 +649,12 @@ class ReducedVariable(AST):
         return ReducedVariable(self.tensor, new_subscripts, new_labels)
 
 
-class ThreeJ(AST):
-    """3j node.
+class TriangularDelta(AST):
+    """Triangular delta node.
 
     Represents a triangular inequality between three indices.
 
-    .. note:: `ThreeJ` nodes have type ``threej``.
+    .. note:: `TriangularDelta` nodes have type ``triangulardelta``.
 
     Parameters
     ----------
@@ -671,7 +670,7 @@ class ThreeJ(AST):
     """
 
     def __init__(self, indices):
-        super(ThreeJ, self).__init__('threej')
+        super(TriangularDelta, self).__init__('triangulardelta')
 
         self.indices = tuple(indices)
 
@@ -687,7 +686,7 @@ class ThreeJ(AST):
         self.depends_on = set(self.indices)
 
     def __str__(self):
-        return 'ThreeJ({})'.format(' '.join(map(str, self.indices)))
+        return 'TriangularDelta({})'.format(' '.join(map(str, self.indices)))
 
 
 class SixJ(AST):
@@ -943,6 +942,7 @@ class Add(AST):
         -------
         True if all terms are diagonal.
         """
+
         def _rec(t):
             if isinstance(t, Variable):
                 return t.tensor.diagonal

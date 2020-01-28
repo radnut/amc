@@ -308,14 +308,14 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
         for v, aux in jvariables)
 
     deltas = tuple(ast.DeltaJ(astidx, subscript_map[idx.constrained_to]) for astidx, idx in external_idx.items() if idx.constrained_to is not None)
-    threejs = tuple(ast.ThreeJ(subscript_map[l] for l in t.indices) for t in Y.threejs)
+    trideltas = tuple(ast.TriangularDelta(subscript_map[l] for l in t.indices) for t in Y.triangulardeltas)
     sixjs = tuple(ast.SixJ(subscript_map[l] for l in s.indices) for s in Y.sixjs)
     ninejs = tuple(ast.NineJ(subscript_map[l] for l in n.indices) for n in Y.ninejs)
     hatfactors = tuple(
         ast.HatPhaseFactor(i, hatpower=idx[i].jhat, jphase=idx[i].jphase, mphase=idx[i].mphase, sign=idx[i].sign)
         for i in sorted(set(subscript_map.values()), key=lambda astidx: astidx.name))
 
-    new_mul = ast.Mul(itertools.chain(deltas, factors, hatfactors, threejs, sixjs, ninejs, reduced_variables))
+    new_mul = ast.Mul(itertools.chain(deltas, factors, hatfactors, trideltas, sixjs, ninejs, reduced_variables))
     new_rhs = ast.Sum(tuple(itertools.chain(internals, (subscript_map[l] for l in aux_rhs if subscript_map[l] not in external_idx))), new_mul)
 
     return new_rhs
