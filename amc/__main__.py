@@ -31,8 +31,6 @@ def parse_command_line():
     parser.add_argument('--keep-trideltas', action='store_true', help='Print triangular deltas.')
     parser.add_argument('--wet-convention', choices=['wigner', 'sakurai'], default='wigner',
                         help='Convention used for Wigner-Eckart reduced matrix elements.')
-    parser.add_argument('--wet-scalar', action='store_true',
-                        help='Reduce scalar matrix elements. Default is to use the unreduced form for scalar tensors.')
     parser.add_argument('-V', '--version', action='version', version='%(prog)s 0.1')
     parser.add_argument('-v', '--verbose', action='count', help='Increase verbosity', default=0)
 
@@ -103,8 +101,7 @@ def main():
         res = amc.reduction.reduce_equation(
             equation,
             collect_ninejs=run_arguments.collect_ninejs,
-            convention=run_arguments.wet_convention,
-            wet_scalar=run_arguments.wet_scalar)
+            convention=run_arguments.wet_convention)
         results.append(res)
 
     output = amc.output.latex.equations_to_document(results, print_triangulardeltas=run_arguments.keep_trideltas)

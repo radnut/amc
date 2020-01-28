@@ -50,7 +50,11 @@ scalar
     Optional property (default ``true``).
     Boolean signalling that the tensor is a scalar (rank-0) tensor.
     Scalar tensors are treated slightly different from nonscalar tensors:
-    The code exploits the aditional constraints on angular momenta of the creator and annihilator indices, and uses Wigner-Eckart unreduced matrix elements by default (this behavior can be changed by an option of the ``amc`` command).
+    The code exploits the aditional constraints on angular momenta of the creator and annihilator indices, and uses Wigner-Eckart unreduced matrix elements by default (this behavior can be changed by the ``reduce`` option).
+reduce
+    Optional property (default ``false`` for scalar tensors)
+    Boolean signalling that reduced matrix elements should be used for this scalar operator.
+    Ignored on nonscalar tensors, which always use reduced matrix elements.
 diagonal
     Optional property (default ``false``).
     Boolean declaring a tensor as diagonal. Diagonal tensors have only half the indices their ``mode`` specifies and no coupling scheme.
@@ -147,8 +151,6 @@ Aside from the required input file, ``amc`` accepts the following optional argum
   --print-threejs       Print 3j-coefficients.
   --wet-convention      ``{wigner,sakurai}``.
                         Convention used for Wigner-Eckart reduced matrix elements.
-  --wet-scalar          Reduce scalar matrix elements.
-                        Default is to use the unreduced form for scalar tensors.
   -V, --version         show program's version number and exit
   -v, --verbose         Increase verbosity
 
@@ -176,7 +178,3 @@ sakurai
         \langle j'm'|T^\lambda_\mu|jm\rangle = \langle jm,\lambda\mu|j'm'\rangle \frac{(j'\|T^\lambda\|j)}{\sqrt{2j+1}}
 
 The ``wigner`` convention is chosen by default.
-
-The ``wet-scalar`` flag changes the handling of scalar tensors.
-By default, the code assumes that matrix elements of scalar tensors are unreduced.
-If the flag is given, scalar operators are treated the same as nonscalar ones, and reduced matrix elements are assumed on input and output.

@@ -7,7 +7,8 @@ declare DE {
 # Coupled cluster amplitudes
 declare T1 {
     mode=2,
-    latex="t"
+    latex="t",
+    reduce=true
 }
 declare T2 {
     mode=4,
@@ -24,6 +25,7 @@ declare ZERO {
 declare F {
     mode=2,
     latex="f",
+    reduce=true
 }
 
 # Two-body Hamiltonian

@@ -12,11 +12,9 @@ class ReductionError(Exception):
 
 
 def reduce_equation(equation, *, permute=None, collect_ninejs=False,
-                    convention='wigner', wet_scalar=False,
-                    monitor=lambda t, nt, p, np: None):
+                    convention='wigner', monitor=lambda t, nt, p, np: None):
     """reduce_equation(equation, *, permute=None, collect_ninejs=False,
-                    convention='wigner', wet_scalar=False,
-                    monitor=lambda t, nt, p, np: None)
+                    convention='wigner', monitor=lambda t, nt, p, np: None)
 
     Reduce the given equation to angular-momentum coupled form.
 
@@ -37,10 +35,6 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
 
     convention : {'wigner', 'sakurai'}
         Use the given convention for Wigner-Eckart reduced matrix elements.
-
-    wet_scalar : `bool`
-        Use reduced matrix elements also for scalar tensors. Default is to use
-        the unreduced matrix elements.
 
     monitor: callable(term: `int`, nterms: `int`, perm: `int`, nperms: `int`)
         Called once for each permutation processed. `term` and `perm` are
@@ -90,7 +84,6 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
                 permute=permute,
                 collect_ninejs=collect_ninejs,
                 convention=convention,
-                wet_scalar=wet_scalar,
                 monitor=lambda p, np: monitor(t, nterms, p, np)))
 
     new_rhs = ast.Add(new_terms)
@@ -99,10 +92,10 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
 
 def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
                 permute=None, collect_ninejs=False, convention='wigner',
-                wet_scalar=False, monitor=lambda p, np: None):
+                monitor=lambda p, np: None):
     """reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
                    permute=None, collect_ninejs=False, convention='wigner',
-                   wet_scalar=False, monitor=lambda p, np: None)
+                   monitor=lambda p, np: None)
 
     Reduce a single term into angular-momentum coupled form.
 
@@ -138,10 +131,6 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
 
     convention : {'wigner', 'sakurai'}
         Use the given convention for Wigner-Eckart reduced matrix elements.
-
-    wet_scalar : `bool`
-        Use reduced matrix elements also for scalar tensors. Default is to use
-        the unreduced matrix elements.
 
     monitor: callable(perm : `int`, nperms : `int`)
         Called once for each permutation processed. `perm` is zero-based.
@@ -218,8 +207,7 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
     jvariables = []
 
     for v in variables:
-        cl, aux = variable_to_clebsches(v, idx, convention=convention,
-                                        wet_scalar=wet_scalar, lhs=False)
+        cl, aux = variable_to_clebsches(v, idx, convention=convention, lhs=False)
         clebsches += cl
         aux_idx += aux
 
@@ -229,7 +217,7 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
     aux_rhs = aux_idx[:]
 
     cl_lhs, aux_lhs = variable_to_clebsches(lhs, external_idx, convention=convention,
-                                            wet_scalar=wet_scalar, lhs=True)
+                                            lhs=True)
 
     external_idx.update({astidx: idx for astidx, idx in zip(aux_lhs_ast, aux_lhs)})
 
@@ -321,8 +309,7 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
     return new_rhs
 
 
-def variable_to_clebsches(v, idx, convention='wigner', wet_scalar=False,
-                          lhs=False):
+def variable_to_clebsches(v, idx, convention='wigner', lhs=False):
     """Generate a Clebsch-Gordan network according to the coupling scheme of
     the given tensor variable.
 
@@ -336,10 +323,6 @@ def variable_to_clebsches(v, idx, convention='wigner', wet_scalar=False,
 
     convention : {'wigner', 'sakurai'}
         Use the given convention for Wigner-Eckart reduced matrix elements.
-
-    wet_scalar : `bool`
-        Use reduced matrix elements also for scalar tensors. Default is to use
-        the unreduced matrix elements.
 
     lhs : `bool`
         Set to True to generate the Clebsch-Gordan network for the variable on
@@ -419,7 +402,7 @@ def variable_to_clebsches(v, idx, convention='wigner', wet_scalar=False,
                          zero=v.tensor.scalar,
                          rank=True)
 
-    if not v.tensor.scalar or wet_scalar:
+    if not v.tensor.scalar or v.tensor.reduce:
         if convention == 'wigner':
             rankidx.jphase += 2
             s0[0].jhat -= 1
@@ -430,7 +413,7 @@ def variable_to_clebsches(v, idx, convention='wigner', wet_scalar=False,
     # where the LHS tensor is an unreduced scalar, we have to add an
     # additional j1 hat factor to cancel the unrestricted m sum that remains
     # after the reduction.
-    if lhs and v.tensor.scalar and not wet_scalar:
+    if lhs and v.tensor.scalar and not v.tensor.reduce:
         s1[0].jhat -= 2
 
     # This Clebsch-Gordan is equal to a delta if the operator is scalar.
@@ -525,6 +508,7 @@ _TYPE_MAP = {
     'hint': 'j{}',
     'rank': 'λ{}',
     }
+
 
 def generate_auxiliary_ast_indices(v, index_number, zero):
     """Generate auxiliary AST indices arising from the reduction of the given variable.

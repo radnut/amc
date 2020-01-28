@@ -249,6 +249,9 @@ class TensorDeclaration(AST):
         of creator and annihilator indices, respectively.
     scalar : `bool`
         `True` if tensor has rank zero, `False` otherwise.
+    reduce : `bool`
+        If `True`, use reduced matrix elements even if the tensor is scalar.
+        Has no effect on nonscalar tensors because these are always reduced.
     diagonal : `bool`
         Flag signaling that the tensor is diagonal. A diagonal tensor only has
         half as many indices as its mode suggests, and no coupling scheme.
@@ -277,7 +280,7 @@ class TensorDeclaration(AST):
         Additional arguments, stored as a dict in the ``attrs`` attribute.
     """
 
-    def __init__(self, name, mode, scalar=True, diagonal=False, scheme=None, **kwargs):
+    def __init__(self, name, mode, scalar=True, reduce=False, diagonal=False, scheme=None, **kwargs):
         super(TensorDeclaration, self).__init__('declare')
 
         try:
@@ -310,6 +313,7 @@ class TensorDeclaration(AST):
         self.mode = mode
         self.totalmode = sum(mode)
         self.scalar = scalar
+        self.reduce = reduce or not scalar
         self.diagonal = diagonal
         self.scheme = scheme
         self.attrs = kwargs
@@ -318,7 +322,7 @@ class TensorDeclaration(AST):
         return self.__repr__()
 
     def __repr__(self):
-        return 'Tensor {0.name} {{mode={0.mode}, scalar={0.scalar}, diagonal={0.diagonal}, scheme={0.scheme} }}'.format(self)
+        return 'Tensor {0.name} {{mode={0.mode}, scalar={0.scalar}, reduce={0.reduce} diagonal={0.diagonal}, scheme={0.scheme} }}'.format(self)
 
     @staticmethod
     def _check_scheme(scheme, start, num):
