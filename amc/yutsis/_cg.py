@@ -35,13 +35,6 @@ class ClebschGordan:
 
         return ThreeJM(self.indices, self.signs)
 
-    @classmethod
-    def getPreamble(cls):
-        """Get the newcommand line for Latex output"""
-
-        return '\\newcommand{\\clebsch}[6]{C_{#1 #2,#3 #4}^{#5 #6}}\n'
-        # return '\\newcommand{\\clebsch}[6]{\\begingroup\\setlength{\\arraycolsep}{0.1em}\\left(\\hskip -\\arraycolsep\\begin{array}{cc|c} #1 & #3 & #5 \\\\ #2 & #4 & #6 \\end{array}\\hskip -    \\arraycolsep\\right)\\endgroup}\n'
-
     def __str__(self):
         """String"""
 

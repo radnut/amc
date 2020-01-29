@@ -134,12 +134,6 @@ class NineJ:
         self.permute_indices(1, 5)
         self.permute_indices(3, 7)
 
-    @classmethod
-    def getPreamble(cls):
-        """Get the newcommand line for Latex output"""
-
-        return '\\newcommand{\\ninej}[9]{\\begingroup\\setlength{\\arraycolsep}{0.2em}\\begin{Bmatrix} #1 & #2 & #3 \\\\ #4 & #5 & #6 \\\\ #7 & #8 & #9 \\end{Bmatrix}_{\\text{9j}}\\endgroup}\n'
-
     def __str__(self):
         """Generate the corresponding LaTeX code"""
 

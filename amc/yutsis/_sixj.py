@@ -132,12 +132,6 @@ class SixJ:
         self.permute_indices(col1, col1 + 3)
         self.permute_indices(col2, col2 + 3)
 
-    @classmethod
-    def getPreamble(cls):
-        """Get the newcommand line for Latex output"""
-
-        return '\\newcommand{\\sixj}[6]{\\begingroup\\setlength{\\arraycolsep}{0.2em}\\begin{Bmatrix} #1 & #2 & #3 \\\\ #4 & #5 & #6 \\end{Bmatrix}_{\\text{6j}}\\endgroup}\n'
-
     def __str__(self):
         """Generate the corresponding LaTeX code"""
 
