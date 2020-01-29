@@ -26,6 +26,31 @@ import amc.parser
 import amc.reduction
 
 
+class _VersionAction(argparse.Action):
+
+    def __init__(self,
+                 option_strings,
+                 version=None,
+                 dest=argparse.SUPPRESS,
+                 default=argparse.SUPPRESS,
+                 help="show program's version number and exit"):
+        super(_VersionAction, self).__init__(
+            option_strings=option_strings,
+            dest=dest,
+            default=default,
+            nargs=0,
+            help=help)
+        self.version = version
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        import textwrap
+
+        version = self.version
+        if version is None:
+            version = parser.version
+        print(textwrap.dedent(version))
+        parser.exit()
+
 def parse_command_line():
     """Return run commands from the Command Line Interface.
 
@@ -34,9 +59,16 @@ def parse_command_line():
 
     """
 
+    version_string = """\
+    amc {version}
+    Copyright (C) 2020 {author}
+    License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
+    This is free software: you are free to change and redistribute it.
+    There is NO WARRANTY, to the extent permitted by law.
+    """.format(version=amc.__version__, author=amc.__author__)
+
     parser = argparse.ArgumentParser(
         description=
-        "ANGULAR MOMENTUM COUPLING v0.1\n\n"
         "Perform angular-momentum coupling on the given equations"
         "and return the result as a LaTeX file.")
 
@@ -46,7 +78,7 @@ def parse_command_line():
     parser.add_argument('--keep-trideltas', action='store_true', help='Print triangular deltas.')
     parser.add_argument('--wet-convention', choices=['wigner', 'sakurai'], default='wigner',
                         help='Convention used for Wigner-Eckart reduced matrix elements.')
-    parser.add_argument('-V', '--version', action='version', version='%(prog)s 0.1')
+    parser.add_argument('-V', '--version', action=_VersionAction, version=version_string)
     parser.add_argument('-v', '--verbose', action='count', help='Increase verbosity', default=0)
 
     args = parser.parse_args()
@@ -56,15 +88,6 @@ def parse_command_line():
 
 def main():
     """Launch the AMC program."""
-
-    print(
-        "#############################\n"
-        "# Angular Momentum Coupling #\n"
-        "#           v0.1            #\n"
-        "#                           #\n"
-        "#      by AMC Dev Team      #\n"
-        "#############################\n"
-    )
 
     # Parse command line
     run_arguments = parse_command_line()

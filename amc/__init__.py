@@ -15,7 +15,17 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 __license__ = 'GPLv3'
-__version__ = '0.1'
 __author__ = 'Julien Ripoche, Alexander Tichai, Roland Wirth'
 
 from . import (ast, output, parser, reduction, yutsis,)
+
+from importlib.metadata import (
+    version as _version,
+    PackageNotFoundError as _PackageNotFoundError,
+    )
+
+try:
+    __version__ = _version(__name__)
+except _PackageNotFoundError:
+    __version__ = 'UNKNOWN'
+    pass
