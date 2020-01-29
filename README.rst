@@ -1,7 +1,15 @@
 AMC
 ===
 
-.. image:: https://img.shields.io/readthedocs/amc   :alt: Read the Docs
+.. image:: https://img.shields.io/readthedocs/amc
+   :alt: Read the Docs
+   :target: https://amc.readthedocs.io/en/latest/
+.. image:: https://img.shields.io/pypi/v/amc
+   :alt: PyPI version
+   :target: https://pypi.org/project/amc/
+.. image:: https://img.shields.io/pypi/l/amc
+   :alt: PyPI license
+   :target: https://choosealicense.com/licenses/gpl-3.0/
 
 In quantum many-body theory, one often encounters problems with rotational
 symmetry. While methods are most conveniently derived in schemes that do not
@@ -60,7 +68,7 @@ The result is
 
     E^{(2)}_{0} = \frac{1}{4} \sum_{a b i j {J}_{0}} \hat{J}_{0}^{2} H_{a b i j}^{{J}_{0} {J}_{0} 0} H_{i j a b}^{{J}_{0} {J}_{0} 0}
 
-See the `User's Guide <docs/ug.rst>`_ for details.
+See the `User's Guide <docs/ug.rst>`__ for details.
 
 Contributing
 ------------
@@ -68,4 +76,4 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 License
 -------
-`GPLv3 <ttps://choosealicense.com/licenses/gpl-3.0/>`_
+`GPLv3 <https://choosealicense.com/licenses/gpl-3.0/>`__
