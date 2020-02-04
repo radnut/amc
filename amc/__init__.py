@@ -19,13 +19,19 @@ __author__ = 'Julien Ripoche, Alexander Tichai, Roland Wirth'
 
 from . import (ast, output, parser, reduction, yutsis,)
 
-from importlib.metadata import (
-    version as _version,
-    PackageNotFoundError as _PackageNotFoundError,
+try:
+    from importlib.metadata import (
+        version as _version,
+        PackageNotFoundError as _PackageNotFoundError,
     )
 
-try:
-    __version__ = _version(__name__)
-except _PackageNotFoundError:
-    __version__ = 'UNKNOWN'
-    pass
+    try:
+        __version__ = _version(__name__)
+    except _PackageNotFoundError:
+        __version__ = 'UNKNOWN'
+except ImportError:
+    try:
+        import pkg_resources
+        __version__ = pkg_resources.get_distribution(__name__).version
+    except ImportError:
+        __version__ = 'UNKNOWN'
