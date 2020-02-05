@@ -6,27 +6,13 @@ or
     python setup.py install
 """
 
-long_description = """
-In quantum many-body theory, one often encounters problems with rotational
-symmetry. While methods are most conveniently derived in schemes that do not
-exploit the symmetry, a symmetry-adapted formulation can lead to orders of
-magnitude savings in computation time. However, actually reducing the formulas
-of a many-body method to symmetry-adapted form is tedious and error-prone.
-
-The AMC package aims to help practitioners by automating the reduction
-process. The unreduced (m-scheme) equations can be entered via an easy-to-use
-language. The package then uses Yutsis graph techniques to reduce the
-resulting network of angular-momentum variables to irreducible Wigner 6j and
-9j symbols, and outputs the reduced equations as a LaTeX file. Moreover, the
-package is based on abstract representations of the unreduced and reduced
-equations in the form of syntax trees, which enable other uses such as
-automatic generation of code that computes the reduced equations.
-"""
-
 from setuptools import setup, find_packages
 import amc
 
 import distutils.command.build_py
+
+with open("README.rst", "r") as fh:
+    long_description = fh.read()
 
 # Override build_py command.
 class BuildPyCommand(distutils.command.build_py.build_py):
@@ -59,7 +45,7 @@ setup(
             'angular momentum',
             'symbolic computation'
             ],
-        url="",
+        url="https://github.com/radnut/amc",
         classifiers=[
             'Development Status :: 5 - Production/Stable',
             'Environment :: Console',
