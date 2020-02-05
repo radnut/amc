@@ -41,7 +41,8 @@ For example, second-order many-body perturbation theory can be reduced in this
 way:
 
 .. code-block:: none
-    :caption: mbpt.amc
+
+    # mbpt.amc
 
     declare E2 {
         mode=0,
@@ -68,7 +69,7 @@ The result is
 
     E^{(2)}_{0} = \frac{1}{4} \sum_{a b i j {J}_{0}} \hat{J}_{0}^{2} H_{a b i j}^{{J}_{0} {J}_{0} 0} H_{i j a b}^{{J}_{0} {J}_{0} 0}
 
-See the `User's Guide <docs/ug.rst>`__ for details.
+See the `User's Guide <https://amc.readthedocs.io/en/latest/ug.html>`__ for details.
 
 Contributing
 ------------
