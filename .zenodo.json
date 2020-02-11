@@ -1,0 +1,35 @@
+{
+    "language": "eng", 
+    "license": "GPL-3.0-or-later", 
+    "title": "AMC", 
+    "related_identifiers": [
+        {
+            "scheme": "doi", 
+            "identifier": "10.5281/zenodo.3663058", 
+            "relation": "isVersionOf"
+        }
+    ], 
+    "upload_type": "software", 
+    "creators": [
+        {
+            "orcid": "0000-0002-9750-4461", 
+            "affiliation": "Facility for Rare Isotope Beams, Michigan State University, East Lansing, Michigan 48824, USA", 
+            "name": "Wirth, Roland"
+        }, 
+        {
+            "orcid": "0000-0002-0618-0685", 
+            "affiliation": "Max-Planck-Institut f\u00fcr Kernphysik, Heidelberg, Germany", 
+            "name": "Tichai, Alexander"
+        }, 
+        {
+            "affiliation": "CEA, DAM, DIF, 91297 Arpajon, France", 
+            "name": "Ripoche, Julien"
+        }, 
+        {
+            "affiliation": "IRFU, CEA, Universit\u00e9 Paris-Saclay, 91191 Gif-sur-Yvette, France", 
+            "name": "Duguet, Thomas"
+        }
+    ], 
+    "access_right": "open", 
+    "description": "<p>An automatic angular-momentum reduction package for tensor networks</p>"
+}
