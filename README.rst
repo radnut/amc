@@ -10,6 +10,8 @@ AMC
 .. image:: https://img.shields.io/pypi/l/amc
    :alt: PyPI license
    :target: https://choosealicense.com/licenses/gpl-3.0/
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3663058.svg
+   :target: https://doi.org/10.5281/zenodo.3663058
 
 In quantum many-body theory, one often encounters problems with rotational
 symmetry. While methods are most conveniently derived in schemes that do not
