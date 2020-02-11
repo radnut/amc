@@ -300,6 +300,7 @@ def equations_to_document(equations, print_triangulardeltas=False):
 \documentclass{scrartcl}
 
 \usepackage{expl3}
+\usepackage{xparse}
 \usepackage{amsmath}
 \usepackage{breqn}
 
@@ -307,19 +308,25 @@ def equations_to_document(equations, print_triangulardeltas=False):
 \newcommand{\sixj}[6]{\begingroup\setlength{\arraycolsep}{0.2em}\begin{Bmatrix} #1 & #2 & #3 \\ #4 & #5 & #6 \end{Bmatrix}\endgroup}
 \newcommand{\ninej}[9]{\begingroup\setlength{\arraycolsep}{0.2em}\begin{Bmatrix} #1 & #2 & #3 \\ #4 & #5 & #6 \\ #7 & #8 & #9 \end{Bmatrix}\endgroup}
 
-\makeatletter
-\newcommand{\hatfact}[1]{\let\hatfact@super\@empty\let\hatfact@sub\@empty\@hatfact #1}
-\newcommand{\@hatfact}[1]{\def\hatfact@main{#1}\hatfact@test}
-\def\hatfact@test{\@ifnextchar_\hatfact@catch@sub{\@ifnextchar^\hatfact@catch@super\hatfact@finalize}}
-\def\hatfact@catch@sub_#1{\expandafter\def\expandafter\hatfact@sub\expandafter{\hatfact@sub#1}\hatfact@test}
-\def\hatfact@catch@super^#1{\expandafter\def\expandafter\hatfact@super\expandafter{\hatfact@super#1}\hatfact@test}
-\def\hatfact@finalize{\hatfact@hat{\hatfact@main}\ifx\hatfact@sub\@empty\else_{\hatfact@sub}\fi\ifx\hatfact@super\@empty\else^{\hatfact@super}\fi}
-
 \ExplSyntaxOn
-\cs_new:Npn \hatfact@hat #1 {\str_if_eq:eeTF{#1}{j}{\hat{\jmath}}{\hat{#1}}}
-\ExplSyntaxOff
+\tl_new:N \l__hatfact_tl
 
-\makeatother
+\NewDocumentCommand{\hatfact} {m} { \__hatfact_parse:n #1 }
+
+\cs_new:Nn \__hatfact_parse:n { \tl_set:Nn \l__hatfact_main_tl {#1} \__hatfact_hat: }
+
+\cs_generate_variant:Nn \str_set:Nn {Nx}
+\cs_new:Nn \__hatfact_hat:
+  {
+    \str_set:Nx \l_tmpa_str {\l__hatfact_main_tl}
+    \str_set:Nn \l_tmpb_str {j}
+    \str_if_eq:NNTF \l_tmpa_str \l_tmpb_str {
+      \hat{\jmath}
+    } {
+      \hat \l__hatfact_main_tl
+    }
+  }
+\ExplSyntaxOff
 
 \begin{document}
 ''']
