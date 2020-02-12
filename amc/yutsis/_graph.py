@@ -16,7 +16,7 @@
 from __future__ import (division, absolute_import, print_function)
 
 from ._delta import Delta
-from ._tridelta import ThreeJ
+from ._threej import ThreeJ
 from ._sixj import SixJ
 from ._ninej import NineJ
 from ._twelvej import TwelveJFirst
