@@ -668,12 +668,12 @@ class ReducedVariable(AST):
         return ReducedVariable(self.tensor, new_subscripts, new_labels)
 
 
-class TriangularDelta(AST):
-    """Triangular delta node.
+class ThreeJ(AST):
+    """3j node.
 
     Represents a triangular inequality between three indices.
 
-    .. note:: `TriangularDelta` nodes have type ``triangulardelta``.
+    .. note:: `ThreeJ` nodes have type ``threej``.
 
     Parameters
     ----------
@@ -689,7 +689,7 @@ class TriangularDelta(AST):
     """
 
     def __init__(self, indices):
-        super(TriangularDelta, self).__init__('triangulardelta')
+        super(ThreeJ, self).__init__('threej')
 
         self.indices = tuple(indices)
 
@@ -705,7 +705,7 @@ class TriangularDelta(AST):
         self.depends_on = set(self.indices)
 
     def __str__(self):
-        return 'TriangularDelta({})'.format(' '.join(map(str, self.indices)))
+        return 'ThreeJ({})'.format(' '.join(map(str, self.indices)))
 
 
 class SixJ(AST):

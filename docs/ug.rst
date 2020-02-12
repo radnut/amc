@@ -148,7 +148,7 @@ Aside from the required input file, ``amc`` accepts the following optional argum
   -o OUTPUT, --output OUTPUT
                         Output file
   --collect-ninejs      Build 9j-coefficients from products of 6j-coefficients.
-  --print-threejs       Print 3j-coefficients.
+  --keep-threejs        Keep 3j-coefficients in the output.
   --wet-convention      ``{wigner,sakurai}``.
                         Convention used for Wigner-Eckart reduced matrix elements.
   -V, --version         show program's version number and exit
@@ -159,7 +159,7 @@ By default, ``amc`` creates a ``.tex`` file with the same basename and in the sa
 The ``collect-ninejs`` option activates a post-processing step during which products of three 6j symbols are coalesced into a 9j symbol.
 This often makes the expressions shorter but can hinder the identification of intermediates, e.g., when one of the 6j symbols only depends on the quantum numbers of one tensor.
 
-The ``print-threejs`` option activates the output of triangular inequality constraints (3j symbols) that were generated during the reduction.
+The ``keep-threejs`` option activates the output of triangular inequality constraints (3j symbols) that were generated during the reduction.
 Mostly, these constraints reproduce constraints that can be inferred from the tensors themselves, so the do not add information.
 Redundant constraints that are implicit in 6j or 9j symbols are never printed.
 

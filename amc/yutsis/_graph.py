@@ -16,7 +16,7 @@
 from __future__ import (division, absolute_import, print_function)
 
 from ._delta import Delta
-from ._tridelta import TriangularDelta
+from ._tridelta import ThreeJ
 from ._sixj import SixJ
 from ._ninej import NineJ
 from ._twelvej import TwelveJFirst
@@ -48,7 +48,7 @@ class YutsisGraph:
         self.deltas.extend(deltas)
 
         # Create list of triangular inequalities
-        self.triangulardeltas = []
+        self.threejs = []
 
         # Create list of 6j-Symbols
         self.sixjs = []
@@ -221,7 +221,7 @@ class YutsisGraph:
         # Merge Y into self
         self.sign *= Y.sign
         self.deltas.extend(Y.deltas)
-        self.triangulardeltas.extend(Y.triangulardeltas)
+        self.threejs.extend(Y.threejs)
         self.sixjs.extend(Y.sixjs)
         self.ninejs.extend(Y.ninejs)
         self.additionalIndices.extend(Y.additionalIndices)
@@ -400,7 +400,7 @@ class YutsisGraph:
         edgeExt1.idx = self.deltas[-1].indices[0]
 
         # Create the 3j-Symbol
-        self.triangulardeltas.append(TriangularDelta(edgeExt1.idx, idxA, idxB))
+        self.threejs.append(ThreeJ(edgeExt1.idx, idxA, idxB))
 
         # Merge external edges (or remove them if lead to one-cycle)
         if edgeExt1.getIncoming() == edgeExt2.getOutgoing():
@@ -647,7 +647,7 @@ class YutsisGraph:
         self.edges.remove(edgeC)
         self.edges.remove(edgeD)
 
-    def finalTriangularDelta(self):
+    def final_threej(self):
         """Create the final triangular inequality."""
 
         if self.get_number_of_nodes() > 2:
@@ -670,7 +670,7 @@ class YutsisGraph:
                 self.nodes[1].changeSign('direct')
 
             # Create the 3j-Symbol
-            self.triangulardeltas.append(TriangularDelta(self.edges[0].idx, self.edges[1].idx, self.edges[2].idx))
+            self.threejs.append(ThreeJ(self.edges[0].idx, self.edges[1].idx, self.edges[2].idx))
 
             # Remove the last 3j-Symbol from the graph
             self.n -= 1
@@ -680,13 +680,13 @@ class YutsisGraph:
             self.edges.remove(self.edges[1])
             self.edges.remove(self.edges[0])
 
-    def remove_redundant_triangulardeltas(self):
+    def remove_redundant_threejs(self):
         """Remove 3j-Symbols that are already part of a 6j-Symbol"""
 
         for sixj in self.sixjs:
-            for tridelta in self.triangulardeltas:
-                if sixj.contains_triangulardelta(tridelta):
-                    self.triangulardeltas.remove(tridelta)
+            for tridelta in self.threejs:
+                if sixj.contains_threej(tridelta):
+                    self.threejs.remove(tridelta)
 
     def printResults(self):
         """Print resulting objects"""
@@ -699,7 +699,7 @@ class YutsisGraph:
             print(delta)
 
         # Show 3j-Symbols
-        for tridelta in self.triangulardeltas:
+        for tridelta in self.threejs:
             print(tridelta)
 
         # Show 6j-Symbols

@@ -312,7 +312,7 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
         for v, aux in jvariables)
 
     deltas = tuple(ast.DeltaJ(astidx, subscript_map[idx.constrained_to]) for astidx, idx in external_idx.items() if idx.constrained_to is not None)
-    trideltas = tuple(ast.TriangularDelta(subscript_map[l] for l in t.indices) for t in Y.triangulardeltas)
+    trideltas = tuple(ast.ThreeJ(subscript_map[l] for l in t.indices) for t in Y.threejs)
     sixjs = tuple(ast.SixJ(subscript_map[l] for l in s.indices) for s in Y.sixjs)
     ninejs = tuple(ast.NineJ(subscript_map[l] for l in n.indices) for n in Y.ninejs)
     hatfactors = tuple(

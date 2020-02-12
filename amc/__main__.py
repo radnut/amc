@@ -51,6 +51,7 @@ class _VersionAction(argparse.Action):
         print(textwrap.dedent(version))
         parser.exit()
 
+
 def parse_command_line():
     """Return run commands from the Command Line Interface.
 
@@ -75,7 +76,7 @@ def parse_command_line():
     parser.add_argument('source', help='input file')
     parser.add_argument('-o', '--output', nargs=1, help='output file')
     parser.add_argument('--collect-ninejs', action='store_true', help='Build 9j-coefficients from products of 6j-coefficients.')
-    parser.add_argument('--keep-trideltas', action='store_true', help='Print triangular deltas.')
+    parser.add_argument('--keep-threejs', action='store_true', help='Keep 3j-coefficients in the output.')
     parser.add_argument('--wet-convention', choices=['wigner', 'sakurai'], default='wigner',
                         help='Convention used for Wigner-Eckart reduced matrix elements.')
     parser.add_argument('-V', '--version', action=_VersionAction, version=version_string)
@@ -142,7 +143,7 @@ def main():
             convention=run_arguments.wet_convention)
         results.append(res)
 
-    output = amc.output.latex.equations_to_document(results, print_triangulardeltas=run_arguments.keep_trideltas)
+    output = amc.output.latex.equations_to_document(results, print_threejs=run_arguments.keep_threejs)
 
     with open(output_file, 'wt') as f:
         f.write(output)

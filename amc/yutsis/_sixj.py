@@ -37,14 +37,14 @@ class SixJ:
 
         self.nint = nint
 
-    def contains_triangulardelta(self, triangulardelta):
+    def contains_threej(self, threej):
         """Check if the 6j-symbol already contains
         the corresponding triangular inequality"""
 
         # Get positions of indices of the 3j-symbol in the 6j-symbol
         positions = []
         for k, idx1 in enumerate(self.indices):
-            for idx2 in triangulardelta.indices:
+            for idx2 in threej.indices:
                 if idx1 == idx2:
                     positions.append(k)
 

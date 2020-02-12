@@ -80,10 +80,10 @@ _TRANSLATION_TABLE = str.maketrans({
 
 class _LatexPrinter(ASTTraverser):
 
-    def __init__(self, *, print_triangulardeltas=False):
+    def __init__(self, *, print_threejs=False):
         ASTTraverser.__init__(self)
 
-        self.print_triangulardeltas = print_triangulardeltas
+        self.print_threejs = print_threejs
 
     def n_equation_exit(self, eqn, results):
         lhs, rhs = results
@@ -163,9 +163,9 @@ class _LatexPrinter(ASTTraverser):
     def n_permute_exit(self, p, results):
         return str(p)
 
-    def n_triangulardelta_exit(self, td, _):
-        if self.print_triangulardeltas:
-            return r'\triangulardelta{{{}}}{{{}}}{{{}}}'.format(*map(self._latexify_index_j, td.indices))
+    def n_threej_exit(self, td, _):
+        if self.print_threejs:
+            return r'\threej{{{}}}{{{}}}{{{}}}'.format(*map(self._latexify_index_j, td.indices))
         else:
             return ''
 
@@ -250,7 +250,7 @@ class _LatexPrinter(ASTTraverser):
         return ltx.translate(_TRANSLATION_TABLE)
 
 
-def convert_expression(expr, print_triangulardeltas=False):
+def convert_expression(expr, print_threejs=False):
     """Convert an expression to a LaTeX string.
 
     The output is meant to be used in a ``dmath`` environment defined by the
@@ -260,7 +260,7 @@ def convert_expression(expr, print_triangulardeltas=False):
     ----------
     expr : `ast.AST`
         An expression represented by an abstract syntax tree.
-    print_triangulardeltas : `bool`
+    print_threejs : `bool`
         Output 3j triangular constraints. In general, these are unnecessary
         because the constraints are implicitly contained in the tensor
         variables.
@@ -270,11 +270,11 @@ def convert_expression(expr, print_triangulardeltas=False):
     latex : `str`
         A LaTeX representation of the expression.
     """
-    lp = _LatexPrinter(print_triangulardeltas=print_triangulardeltas)
+    lp = _LatexPrinter(print_threejs=print_threejs)
     return lp.start(expr)
 
 
-def equations_to_document(equations, print_triangulardeltas=False):
+def equations_to_document(equations, print_threejs=False):
     """Convert a list of equations to a complete LaTeX document.
 
     Generates a section for each equation in the list, and subsections for
@@ -286,7 +286,7 @@ def equations_to_document(equations, print_triangulardeltas=False):
     ----------
     equations : iterable of `ast.Equation`
         Equations to process.
-    print_triangulardeltas : `bool`
+    print_threejs : `bool`
         Output 3j triangular constraints. In general, these are unnecessary
         because the constraints are implicitly contained in the tensor
         variables.
@@ -304,7 +304,7 @@ def equations_to_document(equations, print_triangulardeltas=False):
 \usepackage{amsmath}
 \usepackage{breqn}
 
-\newcommand{\triangulardelta}[3]{\Delta(#1 #2 #3)}
+\newcommand{\threej}[3]{\begingroup\setlength{\arraycolsep}{0.2em}\begin{Bmatrix} #1 & #2 & #3 \end{Bmatrix}\endgroup}
 \newcommand{\sixj}[6]{\begingroup\setlength{\arraycolsep}{0.2em}\begin{Bmatrix} #1 & #2 & #3 \\ #4 & #5 & #6 \end{Bmatrix}\endgroup}
 \newcommand{\ninej}[9]{\begingroup\setlength{\arraycolsep}{0.2em}\begin{Bmatrix} #1 & #2 & #3 \\ #4 & #5 & #6 \\ #7 & #8 & #9 \end{Bmatrix}\endgroup}
 
@@ -341,11 +341,11 @@ def equations_to_document(equations, print_triangulardeltas=False):
             for j, term in enumerate(eqn.rhs):
                 output.append(r'\subsection{{Term {}}}'.format(j + 1))
                 output.append(r'\begin{dmath*}')
-                output.append(convert_expression(term, print_triangulardeltas=print_triangulardeltas))
+                output.append(convert_expression(term, print_threejs=print_threejs))
                 output.append(r'\end{dmath*}')
         else:
             output.append(r'\begin{dmath*}')
-            output.append(convert_expression(eqn, print_triangulardeltas=print_triangulardeltas))
+            output.append(convert_expression(eqn, print_threejs=print_threejs))
             output.append(r'\end{dmath*}')
         output.append(r'')
 

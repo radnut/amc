@@ -338,14 +338,14 @@ def YutsisReduction(indices, clebsches, zeroIdx, max_iter=100):
 
         # Get the final 3J-symbol
         if Y.get_number_of_nodes() == 2:
-            Y.finalTriangularDelta()
+            Y.final_threej()
 
         # Yutsis graph not fully reduced
         if Y.get_number_of_nodes() != 0:
             print("Error: Yutsis graph not fully reduced")
 
         # Remove 3j-Symbols that are already part of a 6j-Symbol
-        Y.remove_redundant_triangulardeltas()
+        Y.remove_redundant_threejs()
 
     # Merge Yutsis graphs
     for Y in Ylist[1:]:
