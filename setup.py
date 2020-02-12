@@ -14,6 +14,18 @@ import distutils.command.build_py
 with open("README.rst", "r") as fh:
     long_description = fh.read()
 
+    # PyPI complains that it cannot find a Pygments lexer for "none"... seriously?
+    long_description = long_description.replace(
+        '.. code-block:: none',
+        '.. code-block::'
+        )
+
+    # PyPI rejects the README because of a MathJax warning... seriously?
+    long_description = long_description.replace(
+        '.. math::',
+        '.. code-block:: latex'
+        )
+
 # Override build_py command.
 class BuildPyCommand(distutils.command.build_py.build_py):
     def run(self):
