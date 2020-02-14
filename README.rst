@@ -11,6 +11,7 @@ AMC
    :alt: PyPI license
    :target: https://choosealicense.com/licenses/gpl-3.0/
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3663058.svg
+   :alt: DOI:10.5281/zenodo.3663058
    :target: https://doi.org/10.5281/zenodo.3663058
 
 In quantum many-body theory, one often encounters problems with rotational
@@ -26,7 +27,7 @@ resulting network of angular-momentum variables to irreducible Wigner 6j and
 9j symbols, and outputs the reduced equations as a LaTeX file. Moreover, the
 package is based on abstract representations of the unreduced and reduced
 equations in the form of syntax trees, which enable other uses such as
-automatic generation of code that computes the reduced equations.
+automatic generation of code that evaluates the reduced equations.
 
 Installation
 ------------
@@ -69,13 +70,29 @@ The result is
 
 .. math::
 
-    E^{(2)}_{0} = \frac{1}{4} \sum_{a b i j {J}_{0}} \hat{J}_{0}^{2} H_{a b i j}^{{J}_{0} {J}_{0} 0} H_{i j a b}^{{J}_{0} {J}_{0} 0}
+    E^{(2)}_{0} = \frac{1}{4} \sum_{a b i j {J}_{0}} \hat{J}_{0}^{2}
+    H_{a b i j}^{{J}_{0} {J}_{0} 0} H_{i j a b}^{{J}_{0} {J}_{0} 0}
 
-See the `User's Guide <https://amc.readthedocs.io/en/latest/ug.html>`__ for details.
+See the `User's Guide <https://amc.readthedocs.io/en/latest/ug.html>`__ for
+details.
+
+Citing
+------
+Releases of this code are deposited to the Zenodo repository. If you use it in
+research work please cite the version used. Go to `the Zenodo record
+<https://doi.org/10.5281/zenodo.3663058>`__ to find bibliographic information
+for each release.
+
+If you use this code in research work please also cite the following publication
+
+    A. Tichai, R. Wirth, J. Ripoche, T. Duguet. *Symmetry reduction of tensor
+    networks in many-body theory I. Automated symbolic evaluation of SU(2)
+    algebra*. `arXiv:2002.05011 <https://arxiv.org/abs/2002.05011>`__ [nucl-th]
 
 Contributing
 ------------
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Pull requests are welcome. For major changes, please open an issue first to
+discuss what you would like to change.
 
 License
 -------
