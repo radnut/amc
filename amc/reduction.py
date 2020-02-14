@@ -320,7 +320,13 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
         for i in sorted(set(subscript_map.values()), key=lambda astidx: astidx.name))
 
     new_mul = ast.Mul(itertools.chain(deltas, factors, hatfactors, trideltas, sixjs, ninejs, reduced_variables))
-    new_rhs = ast.Sum(tuple(itertools.chain(internals, (subscript_map[l] for l in aux_rhs if subscript_map[l] not in external_idx))), new_mul)
+
+    internal_sums = tuple(itertools.chain(internals, (subscript_map[l] for l in aux_rhs if subscript_map[l] not in external_idx)))
+
+    if internal_sums:
+        new_rhs = ast.Sum(internal_sums, new_mul)
+    else:
+        new_rhs = new_mul
 
     return new_rhs
 
