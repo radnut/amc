@@ -67,7 +67,10 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
         If the Yutsis graph cannot be fully reduced.
     """
 
-    rhs = equation.rhs.expand_permutations().expand()
+    if len(equation.rhs) != 0:
+        rhs = equation.rhs.expand_permutations().expand()
+    else:
+        rhs = equation.rhs
 
     if isinstance(rhs, ast.Add):
         terms = rhs
@@ -164,8 +167,8 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
 
     _check_convention(convention)
 
-    if not isinstance(term, (ast.Sum, ast.Mul)):
-        raise ValueError('Term should be (a sum over) a product of factors.')
+    # if not isinstance(term, (ast.Sum, ast.Mul)):
+        # raise ValueError('Term should be (a sum over) a product of factors.')
 
     # For now, we only consider the original permutation. Call the monitor function once.
     monitor(0, 1)
@@ -223,7 +226,9 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
     jvariables = []
 
     for v in variables:
+        print(v)
         cl, aux = variable_to_clebsches(v, idx, convention=convention, lhs=False)
+        print('\n')
         clebsches += cl
         aux_idx += aux
 
@@ -384,6 +389,7 @@ def variable_to_clebsches(v, idx, convention='wigner', lhs=False):
                                 is_particle=False, external=lhs)
         cg = yutsis.ClebschGordan([s0[0], s1[0], cpidx],
                                        [s0[1], s1[1], 1])
+        print(cg)
 
         # If the time-reversed state is coupled, we have to add a (-1)^(j-m)
         # phase.
