@@ -47,6 +47,12 @@ def handle_zero_lines(threejms, indices, deltas):
 
                 # If two indices are equals
                 if threejm.indices.count(idx) == 2:
+                    signs = [threejm.signs[k] for k in range(3) if threejm.indices[k] == idx]
+
+                    # Rule can only be applied if the twice-occurring index appears with both signs.
+                    if signs[0]*signs[1] != -1:
+                        print("Error: Not a proper Yutsis graph. Have node with a loop line and both terminals are outgoing/incoming.")
+                        break
 
                     # Consider the other index
                     diffList = [x for x in threejm.indices if x != idx]
@@ -54,6 +60,7 @@ def handle_zero_lines(threejms, indices, deltas):
                     # diffList should contain only one element
                     if len(diffList) != 1:
                         print("Error: diffList should contain only one element")
+                        break
 
                     # The last one is a zero line
                     zeroIdx = diffList[0]
@@ -61,9 +68,6 @@ def handle_zero_lines(threejms, indices, deltas):
 
                         # Set index summation character to zero
                         zeroIdx.zero = True
-
-                        # Add delta
-                        deltas.append(Delta(zeroIdx, indices[0]))
 
                         # Check1 completed
                         check1done = True
