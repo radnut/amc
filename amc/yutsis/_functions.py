@@ -127,16 +127,6 @@ def handle_zero_lines(threejms, indices, deltas):
                                 if idx2 == idxp:
                                     threejmp.signs[kp] *= -1
 
-                                    # Add the proper (-1)^{j-m} phase
-                                    if threejmp.signs[kp] == -1:
-                                        idx2.jphase += 1
-                                        idx2.mphase -= 1
-
-                                    # Remove the (-1)^{j+m} phase
-                                    else:
-                                        idx2.jphase += 1
-                                        idx2.mphase += 1
-
                     # If first sign negative then permute two first indices
                     if threejm.signs[0] == -1:
                         threejm.exchange(0, 1)
