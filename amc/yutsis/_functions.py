@@ -21,7 +21,7 @@ from ._graph import YutsisGraph
 from ._delta import Delta
 
 
-def handle_zero_lines(threejms, indices, deltas):
+def handle_zero_lines(threejms, indices, deltas, zeroIdx):
     """Treat zero line inside 3JM-symbols"""
 
     # /!\ Check here
@@ -63,11 +63,13 @@ def handle_zero_lines(threejms, indices, deltas):
                         break
 
                     # The last one is a zero line
-                    zeroIdx = diffList[0]
-                    if not zeroIdx.zero:
+                    newzero = diffList[0]
+                    if not newzero.zero:
 
                         # Set index summation character to zero
-                        zeroIdx.zero = True
+                        newzero.zero = True
+
+                        deltas.append(Delta(newzero, zeroIdx))
 
                         # Check1 completed
                         check1done = True
@@ -115,8 +117,8 @@ def handle_zero_lines(threejms, indices, deltas):
                     # If the projections have the same signs then flip the second one
                     if threejm.signs[0] == threejm.signs[1]:
 
-                        # Flip the m2 sign in the phase
-                        idx2.mphase *= -1
+                        # Flip the arrow direction
+                        idx2.jphase += 2
 
                         # For each 3JM-Symbol
                         for threejmp in threejms:
@@ -284,7 +286,7 @@ def YutsisReduction(indices, clebsches, zeroIdx, max_iter=100):
 
     # Treat zero line inside 3JM-symbols
     deltas = []
-    handle_zero_lines(threejms, indices, deltas)
+    handle_zero_lines(threejms, indices, deltas, zeroIdx)
 
     # Canonicalization of the string of 3JM-Symbols
     canonicalize(threejms, indices, deltas)
