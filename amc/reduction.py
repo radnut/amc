@@ -28,9 +28,11 @@ class ReductionError(Exception):
 
 
 def reduce_equation(equation, *, permute=None, collect_ninejs=False,
-                    convention='wigner', monitor=lambda t, nt, p, np: None):
+                    convention='wigner', monitor=lambda t, nt, p, np: None,
+                    verbose=False):
     """reduce_equation(equation, *, permute=None, collect_ninejs=False,
-                    convention='wigner', monitor=lambda t, nt, p, np: None)
+                    convention='wigner', monitor=lambda t, nt, p, np: None,
+                    verbose=False)
 
     Reduce the given equation to angular-momentum coupled form.
 
@@ -55,6 +57,9 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
     monitor: callable(term: `int`, nterms: `int`, perm: `int`, nperms: `int`)
         Called once for each permutation processed. `term` and `perm` are
         zero-based.
+
+    verbose: `bool`
+        Output additional information during the reduction process.
 
     Returns
     -------
@@ -100,7 +105,8 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
                 permute=permute,
                 collect_ninejs=collect_ninejs,
                 convention=convention,
-                monitor=lambda p, np: monitor(t, nterms, p, np)))
+                monitor=lambda p, np: monitor(t, nterms, p, np),
+                verbose=verbose))
 
     new_rhs = ast.Add(new_terms)
     return ast.Equation(new_lhs, new_rhs)
@@ -108,7 +114,7 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
 
 def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
                 permute=None, collect_ninejs=False, convention='wigner',
-                monitor=lambda p, np: None):
+                monitor=lambda p, np: None, verbose=False):
     """reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
                    permute=None, collect_ninejs=False, convention='wigner',
                    monitor=lambda p, np: None)
@@ -150,6 +156,9 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
 
     monitor: callable(perm : `int`, nperms : `int`)
         Called once for each permutation processed. `perm` is zero-based.
+
+    verbose: `bool`
+        Output additional information during the reduction process.
 
     Returns
     -------
@@ -270,6 +279,17 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
                 left_idx = new_idx
             else:
                 left_idx = zero
+
+    if verbose:
+        print('# Clebsch network #')
+        for cl in clebsches:
+            print(cl)
+        print()
+        print('# Yutsis indices #')
+        for yi in itertools.chain(idx.values(), aux_idx):
+            print(yi)
+        print()
+
 
     Y = yutsis.YutsisReduction(list(idx.values()) + aux_idx, clebsches,
                                     zero)

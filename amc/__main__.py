@@ -140,7 +140,8 @@ def main():
         res = amc.reduction.reduce_equation(
             equation,
             collect_ninejs=run_arguments.collect_ninejs,
-            convention=run_arguments.wet_convention)
+            convention=run_arguments.wet_convention,
+            verbose=run_arguments.verbose > 1)
         results.append(res)
 
     output = amc.output.latex.equations_to_document(results, print_threejs=run_arguments.keep_threejs)
