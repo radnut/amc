@@ -1,0 +1,22 @@
+declare R1 {
+    mode=(2,0),
+    latex="R",
+    scheme=(1,-2),
+    scalar=true
+}
+
+declare T1 {
+    mode=(2,0),
+    latex="t",
+    scheme=(1,-2),
+    scalar=true,
+    reduce=true
+}
+
+declare H22 {
+    mode=4,
+    latex="{^{22} \Omega}",
+    scheme=((1,2),(3,4)),
+}
+
+R1_pq = 1/2 * sum_ab(H22_pqab * T1_ab);
