@@ -221,7 +221,10 @@ class _LatexPrinter(ASTTraverser):
             else:
                 sign = '' if hp.mphase > 0 else '-'
 
-            phase_exponent += sign + mphase
+            if hp.jphase == 0:
+                phase_exponent = sign + mphase
+            else:
+                phase_exponent += sign + mphase
 
         if hp.hatpower:
             if hp.hatpower != 1:
