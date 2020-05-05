@@ -38,9 +38,9 @@ class ClebschGordan:
     def __str__(self):
         """String"""
 
-        stringTemplate = "ClebscbGordan: %8s(%1s) %8s(%1s) %8s(%1s)"
+        stringTemplate = "ClebschGordan: %8s(%1s) %8s(%1s) %8s(%1s)"
 
-        return stringTemplate % (self.indices[0].name, '+' if self.signs[0] == 1 else '-',
-                               self.indices[1].name, '+' if self.signs[1] == 1 else '-',
-                               self.indices[2].name, '+' if self.signs[2] == 1 else '-')
+        return stringTemplate % (self.indices[0].name + ('=0' if self.indices[0].zero else ''), '+' if self.signs[0] == 1 else '-',
+                                 self.indices[1].name + ('=0' if self.indices[1].zero else ''), '+' if self.signs[1] == 1 else '-',
+                                 self.indices[2].name + ('=0' if self.indices[2].zero else ''), '+' if self.signs[2] == 1 else '-')
 

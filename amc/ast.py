@@ -337,7 +337,7 @@ class TensorDeclaration(AST):
         return self.__repr__()
 
     def __repr__(self):
-        return 'Tensor {0.name} {{mode={0.mode}, scalar={0.scalar}, reduce={0.reduce} diagonal={0.diagonal}, scheme={0.scheme} }}'.format(self)
+        return 'Tensor {0.name} {{mode={0.mode}, scalar={0.scalar}, reduce={0.reduce}, diagonal={0.diagonal}, scheme={0.scheme} }}'.format(self)
 
     @staticmethod
     def _check_scheme(scheme, start, num):

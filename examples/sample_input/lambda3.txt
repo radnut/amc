@@ -1,0 +1,16 @@
+declare lambda3 {
+    mode = 6,
+    latex = "{\lambda}"
+}
+
+declare rho1 {
+    mode = 2,
+    latex = "{\rho}"
+}
+
+declare rho2 {
+    mode = 4,
+    latex = "{\rho}"
+}
+
+lambda3_abcdef = P(a/bc)*P(d/ef) * rho1_ad * rho2_bcef ;

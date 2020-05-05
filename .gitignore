@@ -5,6 +5,7 @@
 *.py[co]
 
 /amc.egg-info
+/.eggs/
 /build
 /dist
 /docs/_build/

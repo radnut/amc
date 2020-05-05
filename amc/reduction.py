@@ -28,9 +28,11 @@ class ReductionError(Exception):
 
 
 def reduce_equation(equation, *, permute=None, collect_ninejs=False,
-                    convention='wigner', monitor=lambda t, nt, p, np: None):
+                    convention='wigner', monitor=lambda t, nt, p, np: None,
+                    verbose=False):
     """reduce_equation(equation, *, permute=None, collect_ninejs=False,
-                    convention='wigner', monitor=lambda t, nt, p, np: None)
+                    convention='wigner', monitor=lambda t, nt, p, np: None,
+                    verbose=False)
 
     Reduce the given equation to angular-momentum coupled form.
 
@@ -55,6 +57,9 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
     monitor: callable(term: `int`, nterms: `int`, perm: `int`, nperms: `int`)
         Called once for each permutation processed. `term` and `perm` are
         zero-based.
+
+    verbose: `bool`
+        Output additional information during the reduction process.
 
     Returns
     -------
@@ -103,7 +108,8 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
                 permute=permute,
                 collect_ninejs=collect_ninejs,
                 convention=convention,
-                monitor=lambda p, np: monitor(t, nterms, p, np)))
+                monitor=lambda p, np: monitor(t, nterms, p, np),
+                verbose=verbose))
 
     new_rhs = ast.Add(new_terms)
     return ast.Equation(new_lhs, new_rhs)
@@ -111,7 +117,7 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
 
 def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
                 permute=None, collect_ninejs=False, convention='wigner',
-                monitor=lambda p, np: None):
+                monitor=lambda p, np: None, verbose=False):
     """reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
                    permute=None, collect_ninejs=False, convention='wigner',
                    monitor=lambda p, np: None)
@@ -153,6 +159,9 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
 
     monitor: callable(perm : `int`, nperms : `int`)
         Called once for each permutation processed. `perm` is zero-based.
+
+    verbose: `bool`
+        Output additional information during the reduction process.
 
     Returns
     -------
@@ -276,6 +285,17 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
             else:
                 left_idx = zero
 
+    if verbose:
+        print('# Clebsch network #')
+        for cl in clebsches:
+            print(cl)
+        print()
+        print('# Yutsis indices #')
+        for yi in itertools.chain(idx.values(), aux_idx):
+            print(yi)
+        print()
+
+
     Y = yutsis.YutsisReduction(list(idx.values()) + aux_idx, clebsches,
                                     zero)
 
@@ -311,12 +331,22 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
 
     idx = {astidx: i for i, astidx in subscript_map.items() if i.constrained_to is None or i.external or i.is_particle}
 
+    for i in idx.values():
+        i.simplify()
+
     reduced_variables = tuple(
         ast.ReducedVariable(v.tensor, v.subscripts,
                             tuple(subscript_map[l] for l in aux))
         for v, aux in jvariables)
 
-    deltas = tuple(ast.DeltaJ(astidx, subscript_map[idx.constrained_to]) for astidx, idx in external_idx.items() if idx.constrained_to is not None)
+    for astidx, i in external_idx.items():
+        print(astidx, i)
+    print()
+    for astidx, i in idx.items():
+        print(astidx, i)
+
+    deltas = tuple(ast.DeltaJ(astidx, subscript_map[i.constrained_to]) for astidx, i in external_idx.items() if i.constrained_to is not None)
+    deltas += tuple(ast.DeltaJ(astidx, astidx.constrained_to) for astidx, i in internal_idx.items() if astidx.constrained_to is not None)
     trideltas = tuple(ast.ThreeJ(subscript_map[l] for l in t.indices) for t in Y.threejs)
     sixjs = tuple(ast.SixJ(subscript_map[l] for l in s.indices) for s in Y.sixjs)
     ninejs = tuple(ast.NineJ(subscript_map[l] for l in n.indices) for n in Y.ninejs)
