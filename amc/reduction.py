@@ -428,6 +428,19 @@ def variable_to_clebsches(v, idx, convention='wigner', lhs=False):
         aux.append(cpidx)
         return cpidx
 
+
+    def handle_coupling(cp):
+        if isinstance(cp, tuple):
+            s = (rec(cp), 1)
+        else:
+            s = (idx[v.subscripts[abs(cp) - 1]],
+                  +1 if cp > 0 else -1)
+        if s[1] < 0:
+            s[0].jphase += 1
+            s[0].mphase -= 1
+
+        return s
+
     # Special case for simple numbers: generate a zero rank index for consistency.
     if not v.tensor.scheme:
         return [], [yutsis.Idx('int',
@@ -435,16 +448,23 @@ def variable_to_clebsches(v, idx, convention='wigner', lhs=False):
                                external=lhs,
                                zero=True)]
 
-    if isinstance(v.tensor.scheme[0], tuple):
-        s0 = (rec(v.tensor.scheme[0]), 1)
+    if v.tensor.effective_mode[0] == 0 or v.tensor.effective_mode[1] == 0:
+        s = handle_coupling(v.tensor.scheme)
+        zero = yutsis.Idx('int',
+                          is_particle=False,
+                          external=lhs,
+                          zero=True)
+        aux.append(zero)
+
+        if v.tensor.effective_mode[0] == 0:
+            s0 = (zero, 1)
+            s1 = s
+        else:
+            s0 = s
+            s1 = (zero, 1)
     else:
-        s0 = (idx[v.subscripts[abs(v.tensor.scheme[0]) - 1]],
-              +1 if v.tensor.scheme[0] > 0 else -1)
-    if isinstance(v.tensor.scheme[1], tuple):
-        s1 = (rec(v.tensor.scheme[1]), 1)
-    else:
-        s1 = (idx[v.subscripts[abs(v.tensor.scheme[1]) - 1]],
-              +1 if v.tensor.scheme[1] > 0 else -1)
+        s0 = handle_coupling(v.tensor.scheme[0])
+        s1 = handle_coupling(v.tensor.scheme[1])
 
     # The last coupling is different from the previous ones since we have to
     # be compatible with the usual WET conventions.
@@ -604,17 +624,31 @@ def generate_auxiliary_ast_indices(v, index_number, zero):
         aux_ast.append(cpidx)
         return cpidx
 
+
+    def handle_coupling(cp):
+        if isinstance(cp, tuple):
+            s = rec(cp)
+        else:
+            s = idx[v.subscripts[abs(cp) - 1]]
+        return s
+
+
     if not v.tensor.scheme:
         return [zero]
 
-    if isinstance(v.tensor.scheme[0], tuple):
-        s0 = rec(v.tensor.scheme[0])
+    if v.tensor.effective_mode[0] == 0 or v.tensor.effective_mode[1] == 0:
+        s = handle_coupling(v.tensor.scheme)
+        aux_ast.append(zero)
+
+        if v.tensor.effective_mode[0] == 0:
+            s0 = zero
+            s1 = s
+        else:
+            s0 = s
+            s1 = zero
     else:
-        s0 = v.subscripts[abs(v.tensor.scheme[0]) - 1]
-    if isinstance(v.tensor.scheme[1], tuple):
-        s1 = rec(v.tensor.scheme[1])
-    else:
-        s1 = v.subscripts[abs(v.tensor.scheme[1]) - 1]
+        s0 = handle_coupling(v.tensor.scheme[0])
+        s1 = handle_coupling(v.tensor.scheme[1])
 
     if v.tensor.scalar:
         aux_ast.append(zero)

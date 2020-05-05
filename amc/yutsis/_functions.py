@@ -76,6 +76,21 @@ def handle_zero_lines(threejms, indices, deltas, zeroIdx):
 
                     break
 
+                # Equivalent case: two indices are zero.
+                elif [x.zero for x in threejm.indices].count(True) == 2:
+                    diffList = [x for x in threejm.indices if not x.zero]
+                    newzero = diffList[0]
+                    if not newzero.zero:
+
+                        # Set index summation character to zero
+                        newzero.zero = True
+
+                        deltas.append(Delta(newzero, zeroIdx))
+
+                        # Check1 completed
+                        check1done = True
+                    break
+
                 elif indices.count(idx) == 1:
                     pass
                 elif indices.count(idx) == 3:
@@ -102,9 +117,10 @@ def handle_zero_lines(threejms, indices, deltas, zeroIdx):
                     # Consider the non-zero indices
                     diffList = [x for x in threejm.indices if not x.zero]
 
-                    # Multiple zero lines
+                    # Multiple zero lines. This has been handled in check1. We remove the 3JM-Symbol here.
                     if len(diffList) != 2:
-                        print('Error: Not able to treat 3JM-Symbol with multiple zero lines or external lines')
+                        threejms.remove(threejm)
+                        break
 
                     # If non-zero indices are the same then break
                     if(diffList[0] == diffList[1]):

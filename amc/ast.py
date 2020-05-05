@@ -293,6 +293,24 @@ class TensorDeclaration(AST):
 
     **kwargs
         Additional arguments, stored as a dict in the ``attrs`` attribute.
+
+    Attributes
+    ----------
+
+    name : `str`
+    mode : 2-tuple of `int`
+    scalar : `bool`
+    reduce : `bool`
+    diagonal : `bool`
+    scheme : 2-tuple
+    attrs : `dict`
+        All parameters are available as attributes under the same name. `mode`
+        is converted to a tuple, and a `scheme` is generated if none was
+        provided.
+
+    effective_mode : 2-tuple
+        The effective number of left and right indices, accounting for cross
+        coupling.
     """
 
     def __init__(self, name, mode, scalar=True, reduce=False, diagonal=False, scheme=None, **kwargs):
@@ -326,6 +344,7 @@ class TensorDeclaration(AST):
 
         self.name = name
         self.mode = mode
+        self.effective_mode = self._get_effective_mode(mode, scheme)
         self.totalmode = sum(mode)
         self.scalar = scalar
         self.reduce = reduce or not scalar
@@ -374,6 +393,25 @@ class TensorDeclaration(AST):
         else:
             return (TensorDeclaration._create_scheme(start, num - 1), start + num - 1)
 
+    @staticmethod
+    def _get_effective_mode(mode, scheme):
+        ncreators = mode[0]
+        effective_mode = [0, 0]
+
+        def rec(c):
+            if isinstance(c, int):
+                if abs(c) <= ncreators:
+                    effective_mode[0 if c > 0 else 1] += 1
+                else:
+                    effective_mode[1 if c > 0 else 0] += 1
+            else:
+                rec(c[0])
+                rec(c[1])
+
+        if scheme != ():
+            rec(scheme)
+
+        return tuple(effective_mode)
 
 class Equation(AST):
     """Equation node.
