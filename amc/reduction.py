@@ -72,7 +72,11 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
         If the Yutsis graph cannot be fully reduced.
     """
 
-    rhs = equation.rhs.expand_permutations().expand()
+    rhs = equation.rhs
+    if hasattr(rhs, 'expand_permutations'):
+        rhs = rhs.expand_permutations()
+    if hasattr(rhs, 'expand'):
+        rhs = rhs.expand()
 
     if isinstance(rhs, ast.Add):
         terms = rhs
@@ -333,12 +337,6 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
         ast.ReducedVariable(v.tensor, v.subscripts,
                             tuple(subscript_map[l] for l in aux))
         for v, aux in jvariables)
-
-    for astidx, i in external_idx.items():
-        print(astidx, i)
-    print()
-    for astidx, i in idx.items():
-        print(astidx, i)
 
     deltas = tuple(ast.DeltaJ(astidx, subscript_map[i.constrained_to]) for astidx, i in external_idx.items() if i.constrained_to is not None)
     deltas += tuple(ast.DeltaJ(astidx, astidx.constrained_to) for astidx, i in internal_idx.items() if astidx.constrained_to is not None)
