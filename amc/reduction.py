@@ -629,7 +629,7 @@ def generate_auxiliary_ast_indices(v, index_number, zero):
         if isinstance(cp, tuple):
             s = rec(cp)
         else:
-            s = idx[v.subscripts[abs(cp) - 1]]
+            s = v.subscripts[abs(cp) - 1]
         return s
 
 
