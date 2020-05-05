@@ -173,8 +173,8 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
 
     _check_convention(convention)
 
-    if not isinstance(term, (ast.Sum, ast.Mul)):
-        raise ValueError('Term should be (a sum over) a product of factors.')
+    if not isinstance(term, (ast.Sum, ast.Mul, ast.Variable)):
+        raise ValueError('Term should be (a sum over) a product of factors, or a single variable.')
 
     # For now, we only consider the original permutation. Call the monitor function once.
     monitor(0, 1)
