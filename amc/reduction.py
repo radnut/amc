@@ -72,7 +72,11 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
         If the Yutsis graph cannot be fully reduced.
     """
 
-    rhs = equation.rhs.expand_permutations().expand()
+    rhs = equation.rhs
+    if hasattr(rhs, 'expand_permutations'):
+        rhs = rhs.expand_permutations()
+    if hasattr(rhs, 'expand'):
+        rhs = rhs.expand()
 
     if isinstance(rhs, ast.Add):
         terms = rhs
