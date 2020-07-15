@@ -294,7 +294,6 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
             print(yi)
         print()
 
-
     Y = yutsis.YutsisReduction(list(idx.values()) + aux_idx, clebsches,
                                     zero)
 

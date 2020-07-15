@@ -20,10 +20,12 @@ from __future__ import (division, absolute_import, print_function)
 import argparse
 import os.path
 import datetime
+import sys
 
 import amc.output
 import amc.parser
 import amc.reduction
+import amc.yutsis
 
 
 class _VersionAction(argparse.Action):
@@ -81,6 +83,7 @@ def parse_command_line():
                         help='Convention used for Wigner-Eckart reduced matrix elements.')
     parser.add_argument('-V', '--version', action=_VersionAction, version=version_string)
     parser.add_argument('-v', '--verbose', action='count', help='Increase verbosity', default=0)
+    parser.add_argument('-k', '--keep-going', action='store_true', help='Do not stop in case of errors.')
 
     args = parser.parse_args()
 
@@ -133,16 +136,36 @@ def main():
     start_time = datetime.datetime.now()
 
     results = []
+    error_eqns = []
 
     # Angular-momentum reduction
     for i, equation in enumerate(equations):
         print("Equation {0:3d}/{1:3d}...".format(i + 1, len(equations)), flush=True)
-        res = amc.reduction.reduce_equation(
-            equation,
-            collect_ninejs=run_arguments.collect_ninejs,
-            convention=run_arguments.wet_convention,
-            verbose=run_arguments.verbose > 1)
-        results.append(res)
+        try:
+            res = amc.reduction.reduce_equation(
+                equation,
+                collect_ninejs=run_arguments.collect_ninejs,
+                convention=run_arguments.wet_convention,
+                verbose=run_arguments.verbose > 1)
+            results.append(res)
+        except amc.reduction.ReductionError:
+            error_eqns.append(i+1)
+            print('### Could not fully reduce Yutsis graph. ###\n')
+            if not run_arguments.keep_going:
+                sys.exit(1)
+
+        except amc.yutsis.GraphOrientingError as e:
+            error_eqns.append(i+1)
+            print(
+                '### Resulting Yutsis graph could not be oriented. ###\n'
+                'This is often caused by contracting like indices (creator with creator or annihilator with annihilator).\n'
+                'The following pairs of 3jm symbols may provide more information:'
+                )
+            for a, b in e.offending_pairs:
+                print('- {!s} <> {!s}'.format(a, b))
+
+            if not run_arguments.keep_going:
+                sys.exit(1)
 
     output = amc.output.latex.equations_to_document(results, print_threejs=run_arguments.keep_threejs)
 
@@ -151,7 +174,11 @@ def main():
 
     print("Time elapsed: %s.\n" % (datetime.datetime.now() - start_time))
 
-    print("AMC ended successfully!")
+    if error_eqns:
+        print("AMC FAILED!")
+        print("Failed equations: {}".format(', '.join(map(str, error_eqns))))
+    else:
+        print("AMC ended successfully!")
 
 
 if __name__ == "__main__":

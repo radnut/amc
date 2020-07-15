@@ -20,6 +20,14 @@ from copy import copy
 from ._graph import YutsisGraph
 from ._delta import Delta
 
+class GraphOrientingError(RuntimeError):
+    def __init__(self, offending_pairs):
+        self.offending_pairs = offending_pairs
+
+    def __str__(self):
+        return 'GraphOrientingError: {}'.format(', '.join(
+            '{!s} <> {!s}'.format(a, b) for a, b in self.offending_pairs))
+
 
 def handle_zero_lines(threejms, indices, deltas, zeroIdx):
     """Treat zero line inside 3JM-symbols"""
@@ -249,6 +257,8 @@ def canonicalize(threejms, indices, deltas):
         if idxAppear < 2:
             print('Error: Some indices appear only once')
 
+    offending_pairs = set()
+
     # Change sign of angular momentum projections in order
     # to bring the string of 3JM-symbols into canonical form
     outputList = [threejms[0]] if len(threejms) > 0 else []
@@ -272,8 +282,7 @@ def canonicalize(threejms, indices, deltas):
                             threejmp.flip_signs()
                             # This should not append or inconsistent string of clebsch
                             if threejmp in outputList:
-                                errorCount += 1
-                                print("Error: Inconsistent M projections")
+                                offending_pairs.add(frozenset((threejm, threejmp)))
 
                         # If threejmp not already in outputList then append
                         if threejmp not in outputList:
@@ -288,8 +297,8 @@ def canonicalize(threejms, indices, deltas):
                     break
 
     # In case of error
-    if errorCount != 0:
-        print("Error: In the canonicalize process")
+    if offending_pairs:
+        raise GraphOrientingError(offending_pairs)
 
 
 def YutsisReduction(indices, clebsches, zeroIdx, max_iter=100):
