@@ -284,7 +284,7 @@ def equations_to_document(equations, print_threejs=False):
 
     Parameters
     ----------
-    equations : iterable of `ast.Equation`
+    equations : iterable of (`int`, `ast.Equation`) pairs
         Equations to process.
     print_threejs : `bool`
         Output 3j triangular constraints. In general, these are unnecessary
@@ -331,7 +331,7 @@ def equations_to_document(equations, print_threejs=False):
 \begin{document}
 ''']
 
-    for i, eqn in enumerate(equations):
+    for i, eqn in equations:
         output.append(r'\section{{Equation {}}}'.format(i + 1))
         if isinstance(eqn.rhs, Add):
             output.append(r'\begin{dmath*}')

@@ -147,7 +147,7 @@ def main():
                 collect_ninejs=run_arguments.collect_ninejs,
                 convention=run_arguments.wet_convention,
                 verbose=run_arguments.verbose > 1)
-            results.append(res)
+            results.append((i, res))
         except amc.error.Error as e:
             error_eqns.append(i+1)
 
