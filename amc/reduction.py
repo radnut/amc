@@ -21,12 +21,12 @@ from . import ast
 
 from . import yutsis
 
+from .error import (Error, ReductionError, GraphNotReducibleError)
 
-class ReductionError(Exception):
-    """Exception signaling that the Yutsis graph could not be completely reduced."""
-    pass
+__all__ = []
 
 
+__all__.append('reduce_equation')
 def reduce_equation(equation, *, permute=None, collect_ninejs=False,
                     convention='wigner', monitor=lambda t, nt, p, np: None,
                     verbose=False):
@@ -68,8 +68,8 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
 
     Raises
     ------
-    amc.reduction.ReductionError
-        If the Yutsis graph cannot be fully reduced.
+    `amc.error.ReductionError`
+        If one of the terms cannot be fully reduced.
     """
 
     rhs = equation.rhs
@@ -99,8 +99,8 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
     new_terms = []
     nterms = len(terms)
     for t, term in enumerate(terms):
-        new_terms.append(
-            reduce_term(
+        try:
+            red_term = reduce_term(
                 equation.lhs,
                 aux_ast,
                 term,
@@ -110,12 +110,17 @@ def reduce_equation(equation, *, permute=None, collect_ninejs=False,
                 collect_ninejs=collect_ninejs,
                 convention=convention,
                 monitor=lambda p, np: monitor(t, nterms, p, np),
-                verbose=verbose))
+                verbose=verbose)
+        except Error as e:
+            raise ReductionError(term, equation.lhs, t) from e
+
+        new_terms.append(red_term)
 
     new_rhs = ast.Add(new_terms)
     return ast.Equation(new_lhs, new_rhs)
 
 
+__all__.append('reduce_term')
 def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
                 permute=None, collect_ninejs=False, convention='wigner',
                 monitor=lambda p, np: None, verbose=False):
@@ -171,8 +176,10 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
 
     Raises
     ------
-    `reduction.ReductionError`
+    `amc.error.GraphNotReducibleError`
         If the Yutsis graph cannot be fully reduced.
+    `amc.error.GraphNotOrientableError`
+        If the Yutsis graph cannot be oriented.
     """
 
     _check_convention(convention)
@@ -299,7 +306,7 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
 
     if Y.get_number_of_nodes() != 0:
         # Full reduction failed. Until we have permutations, we can only fail here.
-        raise ReductionError()
+        raise GraphNotReducibleError()
 
     if collect_ninejs:
         Y.collect_ninejs()
@@ -358,6 +365,7 @@ def reduce_term(lhs, aux_lhs_ast, term, index_number, zero_ast, *,
     return new_rhs
 
 
+__all__.append('variable_to_clebsches')
 def variable_to_clebsches(v, idx, convention='wigner', lhs=False):
     """Generate a Clebsch-Gordan network according to the coupling scheme of
     the given tensor variable.
@@ -499,6 +507,7 @@ def _check_convention(convention):
                          ' Must be wigner or sakurai.'.format(convention))
 
 
+__all__.append('handle_deltas')
 def handle_deltas(Y):
     """Handle delta constraints arising from the reduction of the Yutsis graph.
 
@@ -579,6 +588,7 @@ _TYPE_MAP = {
     }
 
 
+__all__.append('generate_auxiliary_ast_indices')
 def generate_auxiliary_ast_indices(v, index_number, zero):
     """Generate auxiliary AST indices arising from the reduction of the given variable.
 
@@ -659,6 +669,7 @@ def generate_auxiliary_ast_indices(v, index_number, zero):
     return aux_ast
 
 
+__all__.append('yutsis_auxiliary_indices_to_ast')
 def yutsis_auxiliary_indices_to_ast(aux_idx, subscript_map, index_number, zero):
     """Generate AST indices for unconstrained Yutsis indices.
 

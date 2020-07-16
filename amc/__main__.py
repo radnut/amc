@@ -25,7 +25,7 @@ import sys
 import amc.output
 import amc.parser
 import amc.reduction
-import amc.yutsis
+import amc.error
 
 
 class _VersionAction(argparse.Action):
@@ -148,21 +148,21 @@ def main():
                 convention=run_arguments.wet_convention,
                 verbose=run_arguments.verbose > 1)
             results.append(res)
-        except amc.reduction.ReductionError:
+        except amc.error.Error as e:
             error_eqns.append(i+1)
-            print('### Could not fully reduce Yutsis graph. ###\n')
-            if not run_arguments.keep_going:
-                sys.exit(1)
 
-        except amc.yutsis.GraphOrientingError as e:
-            error_eqns.append(i+1)
-            print(
-                '### Resulting Yutsis graph could not be oriented. ###\n'
-                'This is often caused by contracting like indices (creator with creator or annihilator with annihilator).\n'
-                'The following pairs of 3jm symbols may provide more information:'
-                )
-            for a, b in e.offending_pairs:
-                print('- {!s} <> {!s}'.format(a, b))
+            if isinstance(e.__cause__, amc.error.GraphNotReducibleError):
+                print('### Could not fully reduce Yutsis graph for term {}. ###'.format(e.term_number + 1))
+            elif isinstance(e.__cause__, amc.error.GraphNotOrientableError):
+                print((
+                    '### Resulting Yutsis graph for term {} could not be oriented. ###\n'
+                    'This is often caused by contracting like indices (creator with creator or annihilator with annihilator).\n'
+                    'The following pairs of 3jm symbols may provide more information:'
+                    ).format(e.term_number + 1))
+                for a, b in e.__cause__.offending_pairs:
+                    print('- {!s} <> {!s}'.format(a, b))
+
+            print('Expression that caused the error was: {!s} <- {!s}\n'.format(e.lhs, e.term))
 
             if not run_arguments.keep_going:
                 sys.exit(1)

@@ -20,14 +20,7 @@ from copy import copy
 from ._graph import YutsisGraph
 from ._delta import Delta
 
-class GraphOrientingError(RuntimeError):
-    def __init__(self, offending_pairs):
-        self.offending_pairs = offending_pairs
-
-    def __str__(self):
-        return 'GraphOrientingError: {}'.format(', '.join(
-            '{!s} <> {!s}'.format(a, b) for a, b in self.offending_pairs))
-
+from ..error import GraphNotOrientableError
 
 def handle_zero_lines(threejms, indices, deltas, zeroIdx):
     """Treat zero line inside 3JM-symbols"""
@@ -282,7 +275,7 @@ def canonicalize(threejms, indices, deltas):
                             threejmp.flip_signs()
                             # This should not append or inconsistent string of clebsch
                             if threejmp in outputList:
-                                offending_pairs.add(frozenset((threejm, threejmp)))
+                                offending_pairs.add((threejm, threejmp))
 
                         # If threejmp not already in outputList then append
                         if threejmp not in outputList:
@@ -298,7 +291,7 @@ def canonicalize(threejms, indices, deltas):
 
     # In case of error
     if offending_pairs:
-        raise GraphOrientingError(offending_pairs)
+        raise GraphNotOrientableError(offending_pairs)
 
 
 def YutsisReduction(indices, clebsches, zeroIdx, max_iter=100):

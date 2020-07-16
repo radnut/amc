@@ -14,5 +14,5 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from ._cg import ClebschGordan
-from ._functions import (YutsisReduction, GraphOrientingError)
+from ._functions import YutsisReduction
 from ._idx import Idx
